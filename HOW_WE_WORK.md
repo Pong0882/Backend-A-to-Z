@@ -111,6 +111,27 @@ spring_study/
 - 파일명은 영어 소문자, 하이픈 구분 (예: `ioc-di.md`, `http-basics.md`)
 - 이론 정리 후 해당 날짜의 devlog에서 링크로 연결
 
+### 정리 필요 목록 (notes/pending.md)
+
+- 구현하다가 나온 개념인데 아직 정리 못 한 것들은 `notes/pending.md` 에 추가
+- 발생한 날짜(dayNN)를 함께 기록
+- 사용자가 요청하면 해당 개념을 해당 Phase notes 파일에 정리하고 pending.md에서 ✅ 체크
+
+### pending 개념 학습 플로우
+
+```
+구현 중 새 개념 등장
+       ↓
+pending.md 에 메모
+       ↓
+PR 리뷰에서 해당 코드 라인에 코멘트로 간단히 설명 (예습)
+       ↓
+나중에 사용자가 요청하면 notes에 정식 정리 (복습)
+```
+
+- PR 머지 전 pending 개념이 코드에 등장하면 AI가 리뷰 코멘트 내용을 작성해준다
+- 사용자가 GitHub PR에 직접 붙여넣기 해서 리뷰 연습
+
 ---
 
 ## ROADMAP 체크리스트 업데이트 규칙
