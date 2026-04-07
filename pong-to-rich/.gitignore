@@ -1,0 +1,4 @@
+# 환경 설정 / 민감 정보
+.env
+.env.*
+!.env.example

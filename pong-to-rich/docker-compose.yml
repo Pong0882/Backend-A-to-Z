@@ -1,0 +1,32 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: pong-to-rich-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - pong-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # redis:          ← Phase 8 (알림/캐시) 때 추가
+  # kafka:          ← Phase 16 (Kafka) 때 추가
+  # elasticsearch:  ← Phase 16 (ES) 때 추가
+
+networks:
+  pong-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
