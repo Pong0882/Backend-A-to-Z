@@ -69,3 +69,6 @@ logs/
 # Docker
 # ===========================
 docker-compose.override.yml
+
+# devlog/velog/
+devlog/velog/
