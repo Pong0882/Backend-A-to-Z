@@ -8,6 +8,7 @@
 
 ```
 notes/
+├── general/                    # 프로젝트 무관 참고 지식 (Phase에 없는 개념)
 ├── phase-1-network/            # 네트워크 & HTTP 기초 & IO 모델
 ├── phase-2-os/                 # OS 기초 (프로세스/스레드/메모리)
 ├── phase-3-linux/              # Linux & Shell
