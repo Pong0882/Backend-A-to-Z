@@ -98,6 +98,10 @@ spring_study/
 > 작업 시작할 때 파일을 열고, 진행하면서 계속 추가한다. 하루에 여러 작업을 해도 같은 파일에 이어서 작성한다.
 > 에러가 발생하면 에러 로그 원문을 그대로 붙여넣고, 어느 부분을 보고 어떤 판단을 했는지, 어떻게 해결했는지 반드시 기록한다.
 > 스크린샷 첨부 시 이미지 파일을 git에 직접 올리지 않는다. GitHub Issues 본문에 이미지를 드래그 앤 드롭하면 자동 링크가 생성되고(`https://github.com/user-attachments/assets/...`) 그 링크를 md에 붙여넣는다. Issue를 저장하지 않아도 링크는 영구 유효하다.
+> 사용자가 결과 스크린샷을 올리면 반드시 해당 날짜 devlog에 마크다운 이미지 문법으로 추가한다.
+> ```markdown
+> ![설명](https://github.com/user-attachments/assets/...)
+> ```
 
 ---
 
@@ -137,6 +141,13 @@ spring_study/
 | 구현 코드 | `feat` | `feat: 빈 수동 등록 실습 코드 추가` |
 | devlog 작성 | `docs` | `docs: day01 devlog 작성` |
 | 프로젝트 기획/구조 | `init` | `init: pong-to-rich Spring 프로젝트 초기 세팅` |
+
+---
+
+## 브랜치별 커밋 규칙
+
+- **구현 코드** (`feat/`, `fix/`, `refactor/` 브랜치) → 해당 브랜치에서 커밋 후 PR
+- **이론 정리** (notes/), **devlog**, **HOW_WE_WORK.md**, **ROADMAP.md** → 브랜치 상관없이 `main` 에 직접 커밋
 
 ---
 
