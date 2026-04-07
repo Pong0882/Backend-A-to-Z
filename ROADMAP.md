@@ -73,17 +73,17 @@
 - [ ] `rebase` 동작 원리 정리 (커밋을 복사해서 재적용, merge와 결과는 같지만 히스토리가 다름)
 
 ### 0C-2. Git 핵심 명령어 & 실전 시나리오
-- [ ] **되돌리기 명령어 차이 완전 정리**
+- [x] **되돌리기 명령어 차이 완전 정리** → [정리](./notes/phase-0C-git/git-basics.md)
   - `git restore` — 워킹 디렉터리 변경사항 폐기
   - `git reset --soft/--mixed/--hard` — 커밋 취소 (soft: 스테이징 유지 / mixed: 워킹 디렉터리 유지 / hard: 전부 버림)
   - `git revert` — 되돌리는 커밋을 새로 만듦 (push된 커밋 취소할 때)
   - `reset` vs `revert` 언제 무엇을 써야 하는지 기준 정리
-- [ ] **`git stash`** — 작업 중간에 브랜치 전환해야 할 때 임시 저장
+- [x] **`git stash`** — 작업 중간에 브랜치 전환해야 할 때 임시 저장 → [정리](./notes/phase-0C-git/git-basics.md)
 - [ ] **`git cherry-pick`** — 특정 커밋만 골라서 현재 브랜치에 적용
 - [ ] **`git reflog`** — 실수로 reset/rebase 날렸을 때 복구하는 법
 - [ ] **`git bisect`** — 버그가 처음 생긴 커밋을 이진 탐색으로 찾는 법
 - [ ] **`git blame`** — 특정 라인을 누가 언제 수정했는지 추적
-- [ ] **`git log` 활용** — `--oneline` / `--graph` / `--author` / `--since` / 특정 파일 히스토리
+- [x] **`git log` 활용** — `--oneline` / `--graph` / `--author` / `--since` / 특정 파일 히스토리 → [정리](./notes/phase-0C-git/git-basics.md)
 - [ ] 실습: `reset --hard`로 날린 커밋을 `reflog`로 복구
 - [ ] 실습: `bisect`로 버그 유발 커밋 찾기
 
@@ -108,9 +108,9 @@
 - [ ] 실습: `merge --no-ff`로 머지 커밋 명시적 생성
 
 ### 0C-5. 원격 저장소 & 보안
-- [ ] `fetch` vs `pull` 차이 정리 (`pull` = `fetch` + `merge`)
+- [x] `fetch` vs `pull` 차이 정리 (`pull` = `fetch` + `merge`) → [정리](./notes/phase-0C-git/git-basics.md)
 - [ ] `push --force` vs `push --force-with-lease` 차이 정리 (force-with-lease가 더 안전한 이유)
-- [ ] **`.gitignore` 패턴 규칙 정리** + 이미 tracked된 파일 제거하는 법 (`git rm --cached`)
+- [x] **`.gitignore` 패턴 규칙 정리** + 이미 tracked된 파일 제거하는 법 (`git rm --cached`) → [정리](./notes/phase-0C-git/git-basics.md)
 - [ ] **민감 정보 커밋 사고 대응** — 이미 push된 비밀번호/키를 git history에서 제거하는 법 (`git filter-repo`, BFG)
 - [ ] Git Hooks 정리 (`pre-commit` / `commit-msg` / `pre-push`) — 커밋 전 lint / 테스트 자동 실행
 - [ ] 실습: `pre-commit` hook으로 커밋 전 코드 포맷 자동 적용 (husky 또는 shell script)
