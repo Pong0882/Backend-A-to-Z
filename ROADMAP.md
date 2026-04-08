@@ -9,9 +9,9 @@
 
 | 구분 | 완료 | 미완료 | 합계 |
 |------|------|--------|------|
-| 이론 정리 | 9 | 318 | 327 |
+| 이론 정리 | 17 | 310 | 327 |
 | 실습 | 0 | 309 | 309 |
-| **전체** | **9** | **627** | **636** |
+| **전체** | **16** | **620** | **636** |
 
 > 이 표는 항목 완료 시 수동으로 업데이트한다.
 
@@ -313,6 +313,7 @@
 - [x] IoC(Inversion of Control) 컨테이너 동작 원리 정리 → [정리](./notes/phase-7-spring-core/ioc-di.md)
 - [x] DI(Dependency Injection) — 생성자 주입 vs 필드 주입 vs 세터 주입 비교 정리 → [정리](./notes/phase-7-spring-core/ioc-di.md)
 - [x] Spring Bean 생명주기 (생성 → 의존관계 주입 → 초기화 → 소멸) 정리 → [정리](./notes/phase-7-spring-core/spring-boot-application.md)
+- [x] Bean 스코프 정리 (singleton / prototype / request / session) + 싱글톤 동시성 주의점 → [정리](./notes/phase-7-spring-core/ioc-di.md)
 - [ ] ApplicationContext vs BeanFactory 차이 정리
 - [x] Spring Boot 자동 구성(Auto Configuration) 동작 원리 정리 → [정리](./notes/phase-7-spring-core/spring-boot-application.md)
 - [ ] Tomcat 임베디드 서버 구조 및 요청 처리 흐름 정리
@@ -320,9 +321,9 @@
 
 ### 7-2. Spring 핵심 어노테이션 총정리
 
-- [ ] **Bean 등록/설정**: `@Component` / `@Service` / `@Repository` / `@Controller` / `@Configuration` / `@Bean` 차이
-- [ ] **DI 관련**: `@Autowired` / `@Qualifier` / `@Primary` / `@Lazy` / `@Value` / `@ConfigurationProperties`
-- [ ] **요청 처리**: `@RequestMapping` / `@GetMapping` 등 / `@PathVariable` / `@RequestParam` / `@RequestBody` / `@ResponseBody` / `@ResponseStatus`
+- [x] **Bean 등록/설정**: `@Component` / `@Service` / `@Repository` / `@Controller` / `@Configuration` / `@Bean` 차이 → [정리](./notes/phase-7-spring-core/spring-layers.md)
+- [x] **DI 관련**: `@Value` / `@ConfigurationProperties` → [정리](./notes/phase-7-spring-core/configuration-properties.md)
+- [x] **요청 처리**: `@RequestMapping` / `@GetMapping` 등 / `@PathVariable` / `@RequestParam` / `@RequestBody` / `@ResponseBody` → [정리](./notes/phase-7-spring-core/request-mapping.md)
 - [ ] **트랜잭션**: `@Transactional` 속성 전체 (propagation / isolation / readOnly / rollbackFor / timeout)
 - [ ] **스케줄링**: `@Scheduled` / `@EnableScheduling` / cron 표현식
 - [ ] **비동기**: `@Async` / `@EnableAsync` 동작 원리
@@ -336,7 +337,7 @@
 ### 7-3. MVC 패턴 & DispatcherServlet
 
 - [ ] DispatcherServlet 동작 흐름 정리 (HandlerMapping → HandlerAdapter → ViewResolver)
-- [ ] `@Controller` vs `@RestController` 차이 정리
+- [x] `@Controller` vs `@RestController` 차이 정리 → [정리](./notes/phase-7-spring-core/rest-controller.md)
 - [ ] 요청/응답 처리 전체 흐름 정리 (Filter → Interceptor → AOP → Controller → ResponseBody)
 - [ ] 실습: 순수 Servlet → Spring MVC 마이그레이션 직접 구현
 - [ ] 실습: HandlerInterceptor 커스텀 구현
@@ -381,6 +382,7 @@
 
 ### 8-3. 외부 API 연동
 
+- [x] `RestTemplate` vs `RestClient` vs `WebClient` 비교 정리 → [정리](./notes/phase-8-rest-api/rest-client.md)
 - [ ] `RestTemplate` vs `WebClient` vs `OpenFeign` 비교 정리 (동기/비동기, 사용 시점)
 - [ ] 실습: `RestTemplate`으로 외부 API 호출 구현
 - [ ] 실습: `WebClient`로 논블로킹 외부 API 호출 구현
@@ -389,7 +391,7 @@
 
 ### 8-4. API 문서화
 
-- [ ] Swagger 2 vs SpringDoc OpenAPI 3 비교 정리
+- [x] Swagger 2 vs SpringDoc OpenAPI 3 비교 정리 → [정리](./notes/phase-8-rest-api/swagger-springdoc.md)
 - [ ] 실습: SpringDoc OpenAPI 3 적용 및 커스터마이징
 - [ ] 실습: API 문서에 JWT Bearer 인증 헤더 적용
 - [ ] 실습: API Versioning별 문서 분리
