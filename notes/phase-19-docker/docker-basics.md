@@ -98,3 +98,35 @@ docker rm <컨테이너명>
 docker compose up -d
 docker compose down
 ```
+
+## 부팅 시 docker compose 자동 실행 (systemd)
+
+서버 재시작 시 수동으로 `docker compose up -d` 를 치지 않아도 되도록 systemd 서비스로 등록한다.
+
+`/etc/systemd/system/pong-compose.service`:
+```ini
+[Unit]
+Description=pong-to-rich docker compose
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/ubuntu/Backend-A-to-Z/pong-to-rich
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable pong-compose  # 부팅 시 자동 실행 등록
+sudo systemctl start pong-compose   # 즉시 실행
+```
+
+- `Type=oneshot` — 명령어 한 번 실행 후 종료 (데몬이 아님)
+- `RemainAfterExit=yes` — 실행 후 종료돼도 systemd가 active로 표시
+- `Requires` / `After` — Docker가 먼저 뜬 다음에 실행되도록 순서 보장
