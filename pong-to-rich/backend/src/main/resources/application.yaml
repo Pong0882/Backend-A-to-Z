@@ -3,7 +3,7 @@ spring:
     name: pong-to-rich
 
   profiles:
-    active: local
+    active: ${SPRING_PROFILE:local}
 
   jpa:
     hibernate:
@@ -13,3 +13,9 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger    # 접속 경로
+  api-docs:
+    path: /api-docs            # JSON 스펙 경로
