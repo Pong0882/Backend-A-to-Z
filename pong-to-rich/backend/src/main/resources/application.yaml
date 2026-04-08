@@ -13,3 +13,9 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html     # 접속 경로
+  api-docs:
+    path: /api-docs            # JSON 스펙 경로
