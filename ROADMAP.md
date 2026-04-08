@@ -128,8 +128,8 @@
 
 ### 3-3. 서버 운영 실전
 
-- [ ] `systemd` 서비스 등록 및 관리 정리 (Spring Boot 앱을 서비스로 등록)
-- [ ] SSH 키 기반 인증 정리 (비밀번호 없이 서버 접속, `authorized_keys`)
+- [x] `systemd` 서비스 등록 및 관리 정리 (Spring Boot 앱을 서비스로 등록) → [정리](./notes/phase-19-docker/docker-basics.md)
+- [x] SSH 키 기반 인증 정리 (비밀번호 없이 서버 접속, `authorized_keys`) → [정리](./notes/phase-3-linux/ssh-key-auth.md)
 - [ ] **실무 트러블슈팅 명령어 시나리오**
   - 포트 점유 프로세스 찾기: `lsof -i :8080` / `ss -tlnp`
   - 특정 프로세스 메모리 사용량 확인: `cat /proc/[pid]/status`
@@ -147,7 +147,7 @@
 ### 4-1. application.yml 설계 & 환경 분리
 
 - [ ] `application.yml` vs `application.properties` 차이 정리
-- [ ] Spring Profile 동작 원리 정리 (`@Profile`, `spring.profiles.active`)
+- [x] Spring Profile 동작 원리 정리 (`@Profile`, `spring.profiles.active`) → [정리](./notes/phase-7-spring-core/spring-profiles.md)
 - [ ] 환경별 설정 분리 전략 정리 (`application-dev.yml` / `application-prod.yml` / `application-test.yml`)
 - [ ] 설정값 우선순위 정리 (환경변수 > 커맨드라인 > yml 파일 > 기본값)
 - [ ] 민감 정보 관리 전략 정리 (환경변수 / AWS Secrets Manager / Vault / Jasypt 암호화)
@@ -334,7 +334,22 @@
 - [ ] **JPA**: `@Entity` / `@Table` / `@Id` / `@GeneratedValue` / `@Column` / `@OneToMany` / `@ManyToOne` / `@JoinColumn`
 - [ ] 실습: 헷갈리는 어노테이션 직접 사용하며 동작 확인
 
-### 7-3. MVC 패턴 & DispatcherServlet
+### 7-3. DTO 설계 & 레이어 간 변환
+
+> 레이어마다 DTO를 분리하면 외부 계약과 내부 구현이 분리되어 변경에 강해진다
+
+- [ ] **DTO vs Entity 분리 원칙 정리** — Entity를 Controller까지 노출하면 안 되는 이유
+- [ ] **레이어별 DTO 설계 전략 정리**
+  - `RequestDto` / `ResponseDto` — Controller 레이어, 외부 입출력 계약
+  - `ServiceDto` (Command / Query) — Service 레이어 간 데이터 전달
+  - Entity — Repository ↔ DB 매핑 전용
+- [ ] **CQRS 관점의 DTO 분리 정리** — Command(쓰기)와 Query(읽기) DTO를 분리하는 이유
+- [ ] **MapStruct 정리** — 컴파일 타임 코드 생성 기반 매핑, Reflection 기반 ModelMapper 대비 성능 비교
+- [ ] 실습: 레이어별 DTO 분리 구조 적용 (RequestDto → ServiceDto → Entity 변환 체인)
+- [ ] 실습: MapStruct로 DTO ↔ Entity 자동 매핑 구현
+- [ ] 실습: `@JsonIgnore` / `@JsonProperty` / `@JsonNaming` Jackson 직렬화 제어
+
+### 7-4. MVC 패턴 & DispatcherServlet
 
 - [ ] DispatcherServlet 동작 흐름 정리 (HandlerMapping → HandlerAdapter → ViewResolver)
 - [x] `@Controller` vs `@RestController` 차이 정리 → [정리](./notes/phase-7-spring-core/rest-controller.md)
@@ -343,7 +358,7 @@
 - [ ] 실습: HandlerInterceptor 커스텀 구현
 - [ ] 실습: HandlerMethodArgumentResolver 커스텀 구현
 
-### 7-4. Filter / Interceptor / 쿠키 / 세션
+### 7-5. Filter / Interceptor / 쿠키 / 세션
 
 - [ ] **Filter vs Interceptor 완전 정리** — 실행 시점 / 접근 객체 / 예외 처리 / 사용 기준 비교
 - [ ] Filter 종류 정리 (`OncePerRequestFilter` vs `GenericFilterBean`)
@@ -395,6 +410,21 @@
 - [ ] 실습: SpringDoc OpenAPI 3 적용 및 커스터마이징
 - [ ] 실습: API 문서에 JWT Bearer 인증 헤더 적용
 - [ ] 실습: API Versioning별 문서 분리
+
+### 8-5. GraphQL
+
+> REST의 Over-fetching / Under-fetching 문제를 해결하는 쿼리 언어. 단일 엔드포인트(POST /graphql)로 클라이언트가 원하는 데이터만 요청
+
+- [ ] **REST vs GraphQL 비교 정리**
+  - REST: 엔드포인트별 고정 응답 구조
+  - GraphQL: 클라이언트가 필요한 필드만 지정해서 요청
+  - Over-fetching (필요 이상 데이터) / Under-fetching (여러 번 요청 필요) 문제
+- [ ] **GraphQL 핵심 개념 정리** (Schema / Query / Mutation / Subscription / Resolver)
+- [ ] **GraphQL 단점 정리** (캐싱 어려움, N+1 문제, 복잡한 권한 처리)
+- [ ] **언제 REST, 언제 GraphQL을 써야 하는가** 선택 기준 정리
+- [ ] 실습: Spring for GraphQL 세팅 및 기본 Query / Mutation 구현
+- [ ] 실습: DataLoader로 N+1 문제 해결
+- [ ] 실습: GraphQL Subscription으로 실시간 데이터 구독 구현
 
 ---
 
@@ -452,6 +482,21 @@
 ---
 
 ## PHASE 11 — 데이터베이스 & JPA
+
+### 11-0. DB 설계 원칙 & ERD
+
+> 코드보다 설계가 먼저다. 잘못된 스키마는 나중에 고치기 매우 어렵다
+
+- [ ] **ERD 표기법 정리** (IE 표기법 — 실선/점선, 필수/선택, 1:1 / 1:N / M:N 관계)
+- [ ] **도메인 모델 설계 원칙 정리**
+  - 식별자(PK) 전략 (Auto Increment vs UUID vs ULID — 각각의 장단점)
+  - Soft Delete vs Hard Delete 선택 기준 (`deleted_at` 컬럼 방식)
+  - 생성일/수정일 Auditing 필드 표준화 (`created_at` / `updated_at`)
+  - Null 허용 기준 — 언제 nullable로 설계하는가
+- [ ] **M:N 관계 처리 전략 정리** (중간 테이블 직접 설계 vs JPA `@ManyToMany`)
+- [ ] **계층형 데이터 설계 패턴 정리** (댓글/카테고리 — Adjacency List / Closure Table / Nested Set)
+- [ ] **이력 테이블 설계 패턴 정리** — 변경 이력을 어떻게 저장하는가
+- [ ] 실습: pong-to-rich 전체 도메인 ERD 설계 (User / Stock / Order / Strategy / Trade)
 
 ### 11-1. RDBMS 핵심 원리
 
@@ -542,7 +587,26 @@
 - [ ] 실습: REQUIRED / REQUIRES_NEW / NESTED 전파 옵션 동작 직접 확인
 - [ ] 실습: 자기 호출(Self-Invocation) 문제 재현 및 해결
 
-### 11-8. DB 마이그레이션 (Flyway)
+### 11-8. CQRS 패턴
+
+> 읽기(Query)와 쓰기(Command)를 분리해서 각각 최적화하는 패턴. 단순 코드 분리부터 DB 분리까지 단계가 있다
+
+- [ ] **CQRS 개념 정리**
+  - Command — 상태를 변경하는 작업 (Create / Update / Delete), 반환값 없거나 최소화
+  - Query — 상태를 조회하는 작업 (Read), 사이드 이펙트 없음
+  - 왜 분리하는가 — 읽기/쓰기 트래픽 비율이 다름, 각각 다른 최적화 전략 필요
+- [ ] **CQRS 적용 단계 정리**
+  - Level 1: 같은 DB, 같은 모델 — Command/Query 메서드만 분리
+  - Level 2: 같은 DB, 모델 분리 — Command용 Entity, Query용 DTO 따로
+  - Level 3: DB 분리 — Write DB(MySQL) + Read DB(Read Replica / Elasticsearch)
+- [ ] **Event Sourcing과의 관계 정리** — CQRS와 Event Sourcing은 별개 패턴, 함께 쓰는 경우가 많을 뿐
+- [ ] **CQRS 단점 정리** — 복잡도 증가, 최종 일관성(Eventual Consistency) 허용 필요
+- [ ] 실습: Level 1 CQRS — Service 메서드를 Command / Query로 분리
+- [ ] 실습: Level 2 CQRS — 쓰기용 Entity + 읽기용 QueryDto 분리 구현
+- [ ] 실습: Level 3 CQRS — Read Replica 라우팅 (`@Transactional(readOnly=true)`)
+- [ ] 실습: CQRS 적용 전후 코드 복잡도 및 성능 비교
+
+### 11-9. DB 마이그레이션 (Flyway)
 
 - [ ] Flyway vs Liquibase 비교 정리
 - [ ] Flyway 동작 원리 정리 (버전 관리, checksum, `flyway_schema_history`)
@@ -782,7 +846,7 @@
 
 ### 19-2. 실습
 
-- [ ] 실습: Spring Boot 앱 Dockerfile 작성 (멀티 스테이지 빌드)
+- [x] 실습: Spring Boot 앱 Dockerfile 작성 (멀티 스테이지 빌드) → [정리](./notes/phase-19-docker/dockerfile-multistage.md)
 - [ ] 실습: Docker Compose로 Spring + MySQL + Redis 환경 구성
 - [ ] 실습: 환경변수로 `application.yml` 설정값 외부화
 - [ ] 실습: `.dockerignore` 최적화 및 이미지 경량화
@@ -912,7 +976,7 @@
 - [ ] 실습: Certbot으로 Let's Encrypt SSL 인증서 발급 및 자동 갱신
 - [ ] 실습: HTTPS 리다이렉트 및 HSTS 설정
 - [ ] 실습: HTTP/2 활성화 및 성능 비교
-- [ ] 실습: Cloudflare Tunnel로 로컬 PC와 외부 연결
+- [x] 실습: Cloudflare Tunnel로 로컬 PC와 외부 연결 → [정리](./notes/phase-22-nginx/cloudflare-tunnel.md)
 
 ---
 
@@ -1009,13 +1073,29 @@
 - [ ] 브랜치 전략 정리 (Git Flow vs GitHub Flow vs Trunk-Based)
 - [ ] 배포 전략 정리 (Blue-Green / Canary / Rolling / Recreate)
 
-### 26-2. GitHub Actions 실습
+### 26-2. GitHub Actions 실습 (Push 방식)
 
 - [ ] 실습: PR 시 자동 테스트 실행 워크플로우 구성
-- [ ] 실습: main 브랜치 머지 시 Docker 이미지 빌드 → ECR push 파이프라인
+- [ ] 실습: main 브랜치 머지 시 Docker 이미지 빌드 → GHCR / ECR push 파이프라인
 - [ ] 실습: ECS / EC2 자동 배포 파이프라인 구성
 - [ ] 실습: 환경별 배포 분리 (dev / staging / prod)
 - [ ] 실습: Slack 배포 알림 연동
+
+### 26-3. GitOps & ArgoCD (k8s 환경 Pull 방식)
+
+> k8s 환경에서는 CI(빌드/테스트)와 CD(배포)를 분리하는 것이 표준. CI는 GitHub Actions, CD는 ArgoCD가 담당
+
+- [ ] **Push 방식 vs Pull 방식 (GitOps) 차이 정리**
+  - Push: CI가 직접 서버에 배포 명령 → 서버 접근 권한을 CI가 가짐
+  - Pull(GitOps): ArgoCD가 Git 상태를 주기적으로 감지 → Git이 단일 진실 소스(Source of Truth)
+- [ ] **GitOps 원칙 정리** (선언적 인프라 / Git이 유일한 진실 / 자동 동기화 / 변경 감지)
+- [ ] **ArgoCD 동작 원리 정리** (App of Apps 패턴, Sync / OutOfSync / Degraded 상태)
+- [ ] **Helm Chart 기반 배포 정리** — 환경별 values.yaml로 설정 분리
+- [ ] 실습: GitHub Actions로 이미지 빌드 → GHCR push (CI 단계)
+- [ ] 실습: Helm Chart로 배포 매니페스트 관리 (k8s Deployment / Service / Ingress)
+- [ ] 실습: ArgoCD 설치 및 Git 저장소 연동
+- [ ] 실습: 이미지 태그 변경 → Git 커밋 → ArgoCD 자동 동기화 전체 흐름 구성
+- [ ] 실습: ArgoCD Rollback 실습 (이전 Git 커밋으로 되돌리기)
 
 ### 26-3. Jenkins 실습
 
@@ -1079,14 +1159,56 @@
 
 ### 28-1. 이론
 
-- [ ] 성능 테스트 종류 정리 (Load / Stress / Soak / Spike / Scalability)
-- [ ] 주요 성능 지표 정리 (TPS / Latency / Throughput / Error Rate / Apdex)
-- [ ] 병목 지점 유형 정리 (CPU / 메모리 / DB / 네트워크 / 스레드)
+- [ ] **성능 테스트 종류 완전 정리**
+  - **Smoke Test** — 최소 부하(VU 1~5)로 기본 동작 확인. 배포 직후 제일 먼저 실행
+  - **Load Test** — 예상 정상 트래픽으로 시스템이 목표 성능을 유지하는지 확인
+  - **Stress Test** — 한계까지 부하를 높여서 시스템이 어디서 무너지는지 확인
+  - **Spike Test** — 갑작스러운 트래픽 급증에 어떻게 반응하는지 확인 (이벤트, 프로모션)
+  - **Soak Test (Endurance)** — 장시간 지속 부하로 메모리 누수 / 리소스 고갈 확인
+  - **Breakpoint Test** — 시스템이 실제로 다운되는 한계점 찾기
+  - **Scalability Test** — 인스턴스 증설 시 성능이 선형으로 늘어나는지 확인
+- [ ] **주요 성능 지표 정리** (TPS / RPS / Latency P50/P95/P99 / Throughput / Error Rate / Apdex)
+- [ ] **병목 지점 유형 정리** (CPU bound / 메모리 / DB 커넥션 / Slow Query / 네트워크 / 스레드 풀)
 
-### 28-2. 실습
+### 28-2. 부하 테스트 도구 비교
 
-- [ ] 실습: k6 스크립트로 주요 API 부하 테스트
-- [ ] 실습: k6 시나리오 작성 (점진적 부하 증가 / 스파이크)
+- [ ] **부하 테스트 도구 비교 정리**
+  - **k6** — JavaScript, 코드 기반, CI/CD 연동 최적, 현재 업계 표준 트렌드
+  - **JMeter** — Java, GUI 있음, 기업 환경에서 오래 사용됨, 무겁고 XML 설정
+  - **Gatling** — Scala DSL, 리포트가 깔끔해서 경영진 보고용, 코드 기반
+  - **Locust** — Python, 코드 기반, 분산 테스트 쉬움
+  - **nGrinder** — 네이버 오픈소스, JMeter 기반, 국내 기업 다수 사용
+  - **wrk / hey** — CLI 기반 초간단 부하 테스트, 빠른 스모크용
+- [ ] **도구 선택 기준 정리** — 팀 언어 / CI 연동 / 리포트 요구사항 / 분산 테스트 필요 여부
+
+### 28-3. k6 실습
+
+- [ ] 실습: k6 스크립트 기본 구조 작성 (VU / duration / thresholds)
+- [ ] 실습: 시나리오별 스크립트 작성 (Smoke / Load / Stress / Spike / Soak)
+- [ ] 실습: k6 HTML 리포트 생성 및 분석
+- [ ] 실습: GitHub Actions CI 파이프라인에 k6 Smoke Test 추가 (배포 후 자동 실행)
+- [ ] 실습: Grafana + InfluxDB로 k6 실시간 대시보드 구성
+
+### 28-4. k8s 환경 분산 부하 테스트
+
+- [ ] **k6 Operator 정리** — k8s Pod로 k6 분산 실행, 대규모 부하 생성
+- [ ] 실습: k6 Operator 설치 및 TestRun CRD로 분산 부하 테스트 실행
+- [ ] 실습: 단일 실행 vs 분산 실행 부하 비교
+
+### 28-5. 카오스 엔지니어링
+
+> 부하 테스트가 "얼마나 버티나"라면, 카오스 엔지니어링은 "장애가 생겼을 때 어떻게 회복하나"
+
+- [ ] **카오스 엔지니어링 개념 정리** (Netflix Chaos Monkey에서 시작, 의도적 장애 주입으로 복원력 검증)
+- [ ] **카오스 도구 비교 정리**
+  - **Chaos Mesh** — CNCF, k8s 네이티브, 네트워크 지연/패킷 손실/Pod 킬 등
+  - **Litmus Chaos** — CNCF, k8s 카오스 실험 라이브러리, 워크플로우 기반
+- [ ] 실습: Chaos Mesh 설치 및 네트워크 지연 주입 실험
+- [ ] 실습: Pod 랜덤 킬 실험 → Circuit Breaker 동작 확인
+- [ ] 실습: 카오스 실험 결과 리포트 작성 (장애 주입 → 감지 시간 → 복구 시간)
+
+### 28-6. 성능 분석 실습
+
 - [ ] 실습: async-profiler / IntelliJ Profiler로 CPU / 메모리 핫스팟 분석
 - [ ] 실습: DB Slow Query 로그 분석 및 인덱스 최적화
 - [ ] 실습: 캐싱 적용 전후 성능 비교
@@ -1181,7 +1303,7 @@
 - [ ] **Flyway 심화**: 대규모 무중단 마이그레이션 전략 (Expand-Contract 패턴)
 - [ ] **gRPC 심화**: Protobuf 직렬화 / Unary / Streaming 4가지 통신 방식 / Spring Boot 연동
 - [ ] **Reactive Programming**: WebFlux + R2DBC (Blocking vs Non-Blocking 비교)
-- [ ] **CQRS + Event Sourcing**: 읽기/쓰기 분리 아키텍처 패턴
+- [ ] **CQRS + Event Sourcing**: 상세 내용은 Phase 11-8 참고. Event Sourcing 심화는 여기서 다룸
 - [ ] **Helm Chart 심화**: 커스텀 Chart 작성 및 Chart Repository 운영
 - [ ] **Istio 심화**: mTLS / Traffic Mirroring / Fault Injection
 - [ ] **ArgoCD 심화**: App of Apps 패턴, Multi-cluster 배포
@@ -1200,12 +1322,12 @@
 |-------|------|------|
 | 1 | 네트워크 & 웹 기초 (OSI / TCP / HTTP / IO 모델) | 🔲 진행 전 |
 | 2 | OS 기초 (프로세스 vs 스레드 / 가상 메모리 / CPU 스케줄링) | 🔲 진행 전 |
-| 3 | Linux & Shell | 🔲 진행 전 |
-| 4 | 환경 설정 & Gradle | 🔲 진행 전 |
+| 3 | Linux & Shell | 🟡 진행 중 |
+| 4 | 환경 설정 & Gradle | 🟡 진행 중 |
 | 5 | Git & 협업 워크플로우 | 🟡 진행 중 |
-| 6 | Java & JVM | 🔲 진행 전 |
+| 6 | Java & JVM | 🟡 진행 중 |
 | 7 | Spring 핵심 이론 & 구조 | 🟡 진행 중 |
-| 8 | RESTful API & 문서화 | 🔲 진행 전 |
+| 8 | RESTful API & 문서화 | 🟡 진행 중 |
 | 9 | 예외 처리 & 로깅 전략 | 🔲 진행 전 |
 | 10 | TDD | 🔲 진행 전 |
 | 11 | 데이터베이스 & JPA | 🔲 진행 전 |
@@ -1214,17 +1336,17 @@
 | 14 | Spring Security & 인증/인가 | 🔲 진행 전 |
 | 15 | 알림 서비스 | 🔲 진행 전 |
 | 16 | Redis 심화 | 🔲 진행 전 |
-| 17 | 디자인 패턴 | 🔲 진행 전 |
+| 17 | 디자인 패턴 | 🟡 진행 중 |
 | 18 | 클린 코드 & 성능 최적화 | 🔲 진행 전 |
-| 19 | Docker | 🔲 진행 전 |
+| 19 | Docker | 🟡 진행 중 |
 | 20 | 컨테이너 오케스트레이션 (Swarm / k3s / k8s / EKS) | 🔲 진행 전 |
 | 21 | AI 연동 (Spring AI / RAG / Agent / MCP / 시계열 ML) | 🔲 진행 전 |
-| 22 | NGINX & SSL | 🔲 진행 전 |
+| 22 | NGINX & SSL | 🟡 진행 중 |
 | 23 | MSA & Spring Cloud | 🔲 진행 전 |
 | 24 | Kafka & Elasticsearch | 🔲 진행 전 |
 | 25 | 모니터링 & Observability | 🔲 진행 전 |
 | 26 | CI/CD 파이프라인 | 🔲 진행 전 |
 | 27 | AWS 배포 & 인프라 (SAA 핵심 개념 포함) | 🔲 진행 전 |
-| 28 | 성능 테스트 & 분석 | 🔲 진행 전 |
+| 28 | 성능 테스트 & 분석 & 카오스 엔지니어링 | 🔲 진행 전 |
 | 29 | 장애 대응 & 트러블슈팅 & 유지보수 | 🔲 진행 전 |
 | 30 | 결제 시스템 (PG 연동 / 환불 / 동시 구매 처리) | 🔲 진행 전 |
