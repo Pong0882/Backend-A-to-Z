@@ -270,9 +270,9 @@ PR 리뷰에서 해당 코드 라인에 코멘트로 간단히 설명 (예습)
 
 ## 브랜치별 커밋 규칙
 
-- 구현 코드 → `feat/YYYY-MM-DD` 브랜치에서 커밋 후 `develop` PR
-- 이론 정리(notes/), devlog, HOW_WE_WORK.md, ROADMAP.md, context → `feat/YYYY-MM-DD` 브랜치에서 커밋 후 `develop` PR
-- 실제 서비스 배포 완료 시점에 `develop` → `main` PR
+- 구현 코드, 이론 정리, devlog, context → `feat/YYYY-MM-DD` 브랜치에서 커밋 후 `main` PR
+- HOW_WE_WORK.md, ROADMAP.md 등 관리 문서 → `main` 직접 커밋 가능
+- `develop` 브랜치는 더 이상 사용하지 않음 (2026-04-08 이후 단순화)
 
 ---
 
