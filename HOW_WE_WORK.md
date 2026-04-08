@@ -248,8 +248,7 @@ PR 리뷰에서 해당 코드 라인에 코멘트로 간단히 설명 (예습)
 
 ## 브랜치별 커밋 규칙
 
-- **구현 코드** (`feat/`, `fix/`, `refactor/` 브랜치) → 해당 브랜치에서 커밋 후 PR
-- **이론 정리** (notes/), **devlog**, **HOW_WE_WORK.md**, **ROADMAP.md** → 브랜치 상관없이 `main` 에 직접 커밋
+- 모든 작업 (구현 코드, 이론 정리, devlog, context, HOW_WE_WORK.md, ROADMAP.md) → `feat/YYYY-MM-DD` 브랜치에서 커밋 후 PR
 
 ---
 
