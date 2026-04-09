@@ -54,3 +54,74 @@ springdoc:
   api-docs:
     path: /api-docs
 ```
+
+---
+
+## Swagger JWT Bearer 인증 설정
+
+Swagger UI에서 인증이 필요한 API를 테스트하려면 Bearer 토큰을 입력할 수 있도록 설정해야 한다.
+
+```java
+@Bean
+public OpenAPI openAPI() {
+    return new OpenAPI()
+            .info(new Info()...)
+            .addSecurityItem(new SecurityRequirement().addList("Bearer"))
+            .components(new Components()
+                    .addSecuritySchemes("Bearer", new SecurityScheme()
+                            .name("Bearer")
+                            .type(SecurityScheme.Type.HTTP)
+                            .scheme("bearer")
+                            .bearerFormat("JWT")));
+}
+```
+
+- Swagger UI 우측 상단에 **Authorize 🔒 버튼** 생성
+- 로그인 후 받은 `accessToken`을 입력 (Bearer 접두사 없이)
+- 이후 모든 요청에 `Authorization: Bearer {token}` 헤더 자동 포함
+
+---
+
+## API 문서 커스터마이징 어노테이션
+
+### Controller
+
+```java
+@Tag(name = "Auth", description = "인증 API")           // API 그룹 이름
+@Operation(summary = "로그인", description = "상세 설명") // 엔드포인트 설명
+@ApiResponse(responseCode = "200", description = "성공") // 응답 코드 설명
+@ApiResponses({                                          // 여러 응답 코드
+    @ApiResponse(responseCode = "200", description = "성공"),
+    @ApiResponse(responseCode = "401", description = "인증 실패")
+})
+```
+
+### DTO
+
+```java
+@Schema(description = "로그인 요청")         // DTO 설명
+public class LoginRequest {
+
+    @Schema(description = "이메일", example = "test@test.com")  // 필드 설명 + 예시값
+    private String email;
+
+    @Schema(description = "비밀번호", example = "password123")
+    private String password;
+}
+```
+
+`example` 값은 Swagger UI에서 "Try it out" 클릭 시 Request Body에 자동으로 채워진다.
+
+### `@AuthenticationPrincipal` 주의사항
+
+`JwtAuthenticationFilter`에서 SecurityContext에 저장하는 principal 타입에 따라 꺼내는 방식이 달라진다.
+
+```java
+// JwtAuthenticationFilter에서 email 문자열을 principal로 저장한 경우
+new UsernamePasswordAuthenticationToken(email, null, authorities)
+
+// Controller에서 꺼낼 때 — @AuthenticationPrincipal UserDetails 안 됨 (null)
+// 올바른 방법:
+Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+String email = auth.getName();
+```
