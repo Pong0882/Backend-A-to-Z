@@ -40,7 +40,14 @@ git add -p                    # 변경사항을 chunk 단위로 골라서 스테
 ```bash
 git restore --staged 파일명    # 특정 파일 unstage (add 취소)
 git restore --staged .        # 전체 unstage
+
+# 아래도 동일한 동작 (구버전 방식, 현재도 작동)
+git reset HEAD 파일명          # 특정 파일 unstage
+git reset HEAD                # 전체 unstage
 ```
+
+> `git restore --staged` 는 Git 2.23+에서 추가된 새 방식. 기능은 `git reset HEAD` 와 동일하다.
+> 둘 다 **파일 내용은 그대로** 두고 스테이징만 취소한다.
 
 ---
 
