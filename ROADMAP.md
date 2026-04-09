@@ -9,9 +9,9 @@
 
 | 구분 | 완료 | 미완료 | 합계 |
 |------|------|--------|------|
-| 이론 정리 | 17 | 310 | 327 |
-| 실습 | 0 | 309 | 309 |
-| **전체** | **16** | **620** | **636** |
+| 이론 정리 | 20 | 307 | 327 |
+| 실습 | 3 | 306 | 309 |
+| **전체** | **23** | **613** | **636** |
 
 > 이 표는 항목 완료 시 수동으로 업데이트한다.
 
@@ -331,7 +331,7 @@
 - [ ] **캐시**: `@Cacheable` / `@CachePut` / `@CacheEvict` 동작
 - [ ] **테스트**: `@SpringBootTest` / `@WebMvcTest` / `@DataJpaTest` / `@MockBean` / `@SpyBean`
 - [ ] **조건부 Bean**: `@ConditionalOnProperty` / `@ConditionalOnMissingBean` / `@Profile`
-- [ ] **JPA**: `@Entity` / `@Table` / `@Id` / `@GeneratedValue` / `@Column` / `@OneToMany` / `@ManyToOne` / `@JoinColumn`
+- [x] **JPA**: `@Entity` / `@Table` / `@Id` / `@GeneratedValue` / `@Column` / `@Enumerated` → [정리](./notes/phase-11-database-jpa/jpa-entity-annotations.md) (`@OneToMany` / `@ManyToOne` / `@JoinColumn` 은 연관관계 매핑 시 추가)
 - [ ] 실습: 헷갈리는 어노테이션 직접 사용하며 동작 확인
 
 ### 7-3. DTO 설계 & 레이어 간 변환
@@ -687,16 +687,16 @@
 
 ### 14-1. Security 동작 원리
 
-- [ ] Security Filter Chain 전체 흐름 정리 (주요 필터 역할 각각)
-- [ ] Authentication / Authorization 차이 및 처리 흐름 정리
-- [ ] `SecurityContext` / `SecurityContextHolder` 동작 정리
-- [ ] `PasswordEncoder` 종류 및 BCrypt 동작 정리
+- [x] Security Filter Chain 전체 흐름 정리 (주요 필터 역할 각각) → [정리](./notes/phase-14-security-jwt/spring-security.md)
+- [x] Authentication / Authorization 차이 및 처리 흐름 정리 → [정리](./notes/phase-14-security-jwt/spring-security.md)
+- [x] `SecurityContext` / `SecurityContextHolder` 동작 정리 → [정리](./notes/phase-14-security-jwt/spring-security.md)
+- [x] `PasswordEncoder` 종류 및 BCrypt 동작 정리 → [정리](./notes/phase-14-security-jwt/password-encoder.md)
 
 ### 14-2. JWT 기반 인증 구현
 
-- [ ] JWT 구조 정리 (Header.Payload.Signature) 및 장단점
-- [ ] Access Token / Refresh Token 전략 정리
-- [ ] 실습: JWT 발급 / 검증 / 재발급 필터 구현
+- [x] JWT 구조 정리 (Header.Payload.Signature) 및 장단점 → [정리](./notes/phase-14-security-jwt/jwt.md)
+- [x] Access Token / Refresh Token 전략 정리 → [정리](./notes/phase-14-security-jwt/jwt.md)
+- [x] 실습: JWT 발급 / 검증 / 재발급 필터 구현 → JwtProvider, JwtAuthenticationFilter
 - [ ] 실습: Redis 기반 Refresh Token 저장 및 블랙리스트 구현
 - [ ] 실습: Redis 기반 JWT 로그아웃 처리 구현
 
