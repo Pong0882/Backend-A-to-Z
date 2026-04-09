@@ -19,3 +19,8 @@ springdoc:
     path: /swagger    # 접속 경로
   api-docs:
     path: /api-docs            # JSON 스펙 경로
+
+jwt:
+  secret: pong-to-rich-secret-key-must-be-at-least-256-bits-long-for-hs256
+  access-token-expiration: 1800000    # 30분 (ms)
+  refresh-token-expiration: 604800000 # 7일 (ms)
