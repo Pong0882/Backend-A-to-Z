@@ -9,9 +9,9 @@
 
 | 구분 | 완료 | 미완료 | 합계 |
 |------|------|--------|------|
-| 이론 정리 | 20 | 307 | 327 |
-| 실습 | 3 | 306 | 309 |
-| **전체** | **23** | **613** | **636** |
+| 이론 정리 | 22 | 305 | 327 |
+| 실습 | 6 | 303 | 309 |
+| **전체** | **28** | **608** | **636** |
 
 > 이 표는 항목 완료 시 수동으로 업데이트한다.
 
@@ -407,8 +407,8 @@
 ### 8-4. API 문서화
 
 - [x] Swagger 2 vs SpringDoc OpenAPI 3 비교 정리 → [정리](./notes/phase-8-rest-api/swagger-springdoc.md)
-- [ ] 실습: SpringDoc OpenAPI 3 적용 및 커스터마이징
-- [ ] 실습: API 문서에 JWT Bearer 인증 헤더 적용
+- [x] 실습: SpringDoc OpenAPI 3 적용 및 커스터마이징 (@Operation, @ApiResponse, @Schema)
+- [x] 실습: API 문서에 JWT Bearer 인증 헤더 적용
 - [ ] 실습: API Versioning별 문서 분리
 
 ### 8-5. GraphQL
@@ -448,8 +448,8 @@
 
 ### 9-3. 로깅 전략
 
-- [ ] SLF4J / Logback / Log4j2 비교 정리
-- [ ] 로그 레벨 전략 정리 (TRACE / DEBUG / INFO / WARN / ERROR 사용 기준)
+- [x] SLF4J / Logback / Log4j2 비교 정리 → [정리](./notes/phase-9-logging/logging-strategy.md)
+- [x] 로그 레벨 전략 정리 (TRACE / DEBUG / INFO / WARN / ERROR 사용 기준) → [정리](./notes/phase-9-logging/logging-strategy.md)
 - [ ] MDC(Mapped Diagnostic Context) 요청 추적 ID 전파 정리
 - [ ] 실습: AOP 기반 요청 / 응답 / 예외 자동 로깅 구현
 - [ ] 실습: MDC로 요청별 `traceId` 부여 및 로그 자동 포함
@@ -697,7 +697,8 @@
 - [x] JWT 구조 정리 (Header.Payload.Signature) 및 장단점 → [정리](./notes/phase-14-security-jwt/jwt.md)
 - [x] Access Token / Refresh Token 전략 정리 → [정리](./notes/phase-14-security-jwt/jwt.md)
 - [x] 실습: JWT 발급 / 검증 / 재발급 필터 구현 → JwtProvider, JwtAuthenticationFilter
-- [ ] 실습: Redis 기반 Refresh Token 저장 및 블랙리스트 구현
+- [x] 실습: DB 기반 Refresh Token 저장 / 재발급 / 로그아웃 구현
+- [ ] 실습: Redis 기반 Refresh Token 저장 및 블랙리스트 구현 (DB → Redis 전환 + 성능 비교)
 - [ ] 실습: Redis 기반 JWT 로그아웃 처리 구현
 
 ### 14-3. 보안 취약점 방어
