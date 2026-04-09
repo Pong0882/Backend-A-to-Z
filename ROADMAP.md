@@ -9,9 +9,9 @@
 
 | 구분 | 완료 | 미완료 | 합계 |
 |------|------|--------|------|
-| 이론 정리 | 20 | 307 | 327 |
-| 실습 | 3 | 306 | 309 |
-| **전체** | **23** | **613** | **636** |
+| 이론 정리 | 20 | 328 | 348 |
+| 실습 | 4 | 326 | 330 |
+| **전체** | **24** | **654** | **678** |
 
 > 이 표는 항목 완료 시 수동으로 업데이트한다.
 
@@ -697,8 +697,10 @@
 - [x] JWT 구조 정리 (Header.Payload.Signature) 및 장단점 → [정리](./notes/phase-14-security-jwt/jwt.md)
 - [x] Access Token / Refresh Token 전략 정리 → [정리](./notes/phase-14-security-jwt/jwt.md)
 - [x] 실습: JWT 발급 / 검증 / 재발급 필터 구현 → JwtProvider, JwtAuthenticationFilter
-- [ ] 실습: Redis 기반 Refresh Token 저장 및 블랙리스트 구현
-- [ ] 실습: Redis 기반 JWT 로그아웃 처리 구현
+- [x] 실습: Refresh Token DB 저장 + 로그아웃 구현 (재발급 / 삭제)
+- [ ] Refresh Token Rotation 정리 (재사용 감지 → 토큰 탈취 대응 원리)
+- [ ] 실습: Redis 기반 Refresh Token 전환 (DB → Redis 성능 비교 포함)
+- [ ] 실습: Redis 기반 Access Token 블랙리스트 구현 (로그아웃 후 30분 이내 재사용 방지)
 
 ### 14-3. 보안 취약점 방어
 
@@ -708,15 +710,25 @@
 - [ ] XSS 공격 원리 및 방어 정리
 - [ ] SQL Injection 방어 정리 (PreparedStatement, JPA 파라미터 바인딩)
 - [ ] 보안 HTTP 헤더 정리 (`X-Frame-Options` / `Strict-Transport-Security` / `Content-Security-Policy`)
+- [ ] **입력 검증 전략 정리** (`@Valid` / `@NotBlank` / `@Pattern` / `ConstraintViolation`)
+- [ ] **전역 예외 처리 정리** (`@RestControllerAdvice` / `ErrorCode` Enum / 에러 응답 포맷 통일)
+- [ ] 실습: `@Valid` + `@RestControllerAdvice` 입력 검증 및 예외 처리 구현
 - [ ] 실습: Spring Security 설정으로 보안 헤더 일괄 적용
-- [ ] 실습: CORS 설정 (허용 Origin / Method / Header 세분화)
+- [ ] 실습: CORS 설정 (허용 Origin / Method / Header 세분화) — Swagger Mixed Content 해결 포함
 - [ ] 실습: SQL Injection / XSS 공격 재현 및 방어 구현
 
 ### 14-4. Rate Limiting & API Throttling
 
+> 서버 보호뿐 아니라 외부 API 쿼터 보호에도 필수. 한투 Open API / AI API는 분당 요청 수 제한이 있어 초과 시 차단됨.
+
 - [ ] Rate Limiting 알고리즘 정리 (Token Bucket / Leaky Bucket / Fixed Window / Sliding Window)
+- [ ] **외부 API 쿼터 관리 전략 정리** — 한투 Open API / AI API 요청 제한 초과 방지
+  - 클라이언트 → 서버 요청 수 제한 (사용자별 / IP별)
+  - 서버 → 외부 API 요청 수 제한 (전역 쿼터 카운터 Redis 관리)
+  - 쿼터 초과 시 응답 전략 (큐잉 / 캐싱 / 429 응답)
 - [ ] 실습: Bucket4j + Redis 기반 API Rate Limiting 구현
 - [ ] 실습: `@RateLimit` 커스텀 어노테이션으로 엔드포인트별 제한
+- [ ] 실습: 한투 API 요청 쿼터 카운터 구현 (Redis incr + TTL 방식)
 - [ ] 실습: Spring Cloud Gateway Rate Filter 구현 (MSA 환경)
 
 ### 14-5. 소셜 로그인 (OAuth2)
@@ -940,7 +952,16 @@
 - [ ] 실습: KIS API 실시간 시세 + 뉴스 감성 점수 결합 전략 구현
 - [ ] 실습: Kafka 기반 뉴스 이벤트 스트림 → 실시간 감성 분석 파이프라인
 
-### 21-5. 시계열 분석 & ML 파이프라인 (심화 / 선택)
+### 21-5. AI 보안 (Phase 31과 연계)
+
+> 기본 개념은 여기서 다루고, 실습 구현은 Phase 31-2에서 진행한다.
+
+- [ ] Prompt Injection 공격 원리 정리 → 실습은 Phase 31-2
+- [ ] 벡터 DB 접근 제어 정리 → 실습은 Phase 31-2
+- [ ] AI API 비용 폭탄 방지 전략 정리 → 실습은 Phase 31-2
+- [ ] LLM 응답 검증 전략 정리 → 실습은 Phase 31-2
+
+### 21-6. 시계열 분석 & ML 파이프라인 (심화 / 선택)
 
 > 백엔드 개발자 필수 영역은 아님. pong-to-rich 예측 고도화 시점에 진행
 
@@ -1298,6 +1319,168 @@
 
 ---
 
+## PHASE 31 — 보안 심화
+
+> Phase 14에서 다룬 인증/인가를 넘어서, 실제 서비스 운영 / 금융 서비스 / AI 서비스에서 요구되는 보안을 다룬다.
+> pong-to-rich는 주식 자동매매 + AI 분석 플랫폼이므로 이 Phase는 실무 필수 수준으로 다룬다.
+
+### 31-1. 계정 보안 강화
+
+- [ ] **로그인 실패 잠금 정리**
+  - N회 실패 시 계정 잠금 원리 (Redis 기반 실패 카운터 + TTL)
+  - 잠금 해제 전략: 시간 기반 자동 해제 vs 이메일 인증 해제
+  - IP 기반 잠금 vs 계정 기반 잠금 차이
+- [ ] **비밀번호 재설정 플로우 정리**
+  - 이메일 토큰 방식 동작 원리 (1회용 토큰 발급 → 링크 클릭 → 검증 → 재설정)
+  - 토큰 만료 시간 설정 기준 (보통 15~30분)
+  - 재설정 토큰 DB 저장 vs Redis 저장 비교
+- [ ] **2FA (Two-Factor Authentication) 정리**
+  - TOTP (Time-based One-Time Password) 동작 원리 (Google Authenticator 방식)
+  - SMS OTP vs TOTP 비교 (보안성 / 구현 복잡도)
+  - 금융 서비스에서 2FA가 사실상 필수인 이유
+- [ ] **동시 로그인 제어 정리**
+  - 단일 기기 로그인 강제 vs 멀티 기기 허용 정책 결정 기준
+  - 새 로그인 시 기존 세션 강제 만료 구현 방법
+  - 새 기기 로그인 알림 (이메일 / 푸시)
+- [ ] 실습: 로그인 실패 5회 → 30분 잠금 구현 (Redis 카운터 + TTL)
+- [ ] 실습: 이메일 기반 비밀번호 재설정 플로우 구현 (토큰 발급 → 검증 → 재설정)
+- [ ] 실습: TOTP 기반 2FA 구현 (Google Authenticator 연동)
+- [ ] 실습: 동시 로그인 감지 + 기존 Refresh Token 강제 만료 구현
+
+### 31-2. 금융 서비스 보안
+
+- [ ] **멱등성(Idempotency) 완전 정리**
+  - 네트워크 오류 / 클라이언트 재시도로 중복 요청이 들어올 때 한 번만 처리되는 원리
+  - `Idempotency-Key` 헤더 방식 / Redis 기반 중복 감지 구현 방법
+  - 주식 주문 / 결제에서 멱등성이 없으면 생기는 문제 시나리오
+- [ ] **감사 로그(Audit Log) 설계 정리**
+  - 금융 규정상 누가 언제 무엇을 했는지 변경 불가능한 로그로 남겨야 하는 이유
+  - Append-only 테이블 설계 / 이벤트 소싱 기반 감사 로그 차이
+  - `@CreatedBy` / `@LastModifiedBy` Spring Data Auditing 활용
+- [ ] **금융 데이터 암호화 정리**
+  - 저장 시 암호화 (Encryption at Rest) vs 전송 시 암호화 (Encryption in Transit)
+  - 민감 컬럼 암호화 전략 (계좌번호 등) — AES-256 적용 방법
+  - 키 관리 전략 (AWS KMS / HashiCorp Vault)
+- [ ] **이상 거래 탐지 (FDS) 정리**
+  - 비정상적인 매매 패턴 감지 원리 (단시간 대량 주문, 비정상 금액, 새벽 거래 등)
+  - Rule-based FDS vs ML-based FDS 비교
+  - 탐지 후 처리 전략: 거래 차단 / 알림 / 수동 검토 큐
+- [ ] **전자금융거래법 핵심 요구사항 정리** (한국 금융 서비스 법적 의무사항)
+  - 거래 기록 5년 보존 의무
+  - 이용자 본인 확인 의무
+  - 부정 거래 방지 시스템 구축 의무
+- [ ] **PCI-DSS 개념 정리** — 카드 정보 직접 저장 금지, PG사 위임 이유, 규정 요약
+- [ ] 실습: `Idempotency-Key` 기반 중복 주문 방지 구현 (Redis + 주식 주문 API 연동)
+- [ ] 실습: 매매 이력 감사 로그 테이블 설계 및 AOP 기반 자동 기록 구현
+- [ ] 실습: 민감 컬럼 AES-256 암호화 / 복호화 구현 (JPA AttributeConverter 활용)
+- [ ] 실습: Rule-based 이상 거래 탐지 구현 (단시간 N회 주문 감지 → 자동 차단)
+
+### 31-3. 데이터 보호 & 개인정보
+
+- [ ] **로그 마스킹 정리**
+  - 로그에 이메일 / 계좌번호 / 전화번호가 그대로 찍히면 안 되는 이유
+  - Logback PatternLayout 커스터마이징으로 민감 정보 자동 마스킹 방법
+  - 마스킹 패턴 예시: `test@test.com` → `te**@****.com`
+- [ ] **개인정보보호법 / GDPR 핵심 요구사항 정리**
+  - 수집 최소화 원칙 (필요한 데이터만 수집)
+  - 보존 기간 정책 (언제까지 갖고 있을 수 있는가)
+  - 탈퇴 사용자 데이터 처리 의무 (삭제 vs 익명화)
+  - 개인정보 처리 방침 필수 고지 항목
+- [ ] **데이터 보존 정책 설계 정리**
+  - 탈퇴 후 즉시 삭제 vs 일정 기간 보존 후 삭제 vs 익명화 전략
+  - Soft Delete vs Hard Delete 선택 기준
+  - 자동 파기 스케줄러 설계 방법
+- [ ] 실습: Logback 커스텀 마스킹 필터 구현 (이메일 / 계좌번호 자동 마스킹)
+- [ ] 실습: 탈퇴 API 구현 (개인정보 즉시 익명화 + 거래 기록 보존)
+- [ ] 실습: 데이터 자동 파기 스케줄러 구현 (`@Scheduled` + 보존 기간 초과 데이터 삭제)
+
+### 31-4. 공격 탐지 & 보안 모니터링
+
+- [ ] **보안 이벤트 로그 중앙화 (SIEM 개념) 정리**
+  - SIEM이란 무엇인가 (Security Information and Event Management)
+  - 어떤 이벤트를 보안 로그로 남겨야 하는가 (로그인 성공/실패, 권한 변경, 대량 조회 등)
+  - ELK Stack 기반 보안 이벤트 수집 / 시각화 방법
+- [ ] **IP 차단 / 허용 목록 관리 정리**
+  - 동적 IP 차단 전략 (공격 감지 → 자동 차단 → 일정 시간 후 해제)
+  - 관리자 IP 화이트리스트 관리 방법
+  - AWS WAF / Cloudflare 기반 IP 차단 vs 애플리케이션 레벨 차단 비교
+- [ ] **비정상 접근 패턴 탐지 정리**
+  - 단시간 대량 요청 (DDoS 징후) 감지 방법
+  - 크리덴셜 스터핑 공격 감지 (여러 계정 순차 로그인 시도)
+  - 비정상 시간대 접근 / 비정상 지역 접근 감지
+- [ ] 실습: 보안 이벤트 로그 구조 설계 및 ELK 연동 (로그인 실패 / 권한 오류 수집)
+- [ ] 실습: AWS WAF 규칙 설정 (IP 차단 / Rate Limiting / SQL Injection 방어)
+- [ ] 실습: 관리자 대시보드에서 실시간 보안 이벤트 모니터링 구현
+
+### 31-5. AI 서비스 보안
+
+- [ ] **Prompt Injection 공격 원리 및 방어 정리**
+  - 사용자가 악의적인 프롬프트로 AI 동작을 조작하는 공격 패턴
+  - RAG 시스템에서 Prompt Injection이 특히 위험한 이유 (외부 문서 → 프롬프트 주입)
+  - 방어 전략: 입력 검증 / 시스템 프롬프트 분리 / 출력 필터링
+- [ ] **벡터 DB 접근 제어 정리**
+  - 임베딩된 데이터에 권한 없는 사용자가 접근하는 문제
+  - 메타데이터 필터링 기반 접근 제어 (사용자별 데이터 격리)
+  - 유사도 검색 결과에 권한 필터 적용 방법
+- [ ] **AI API 비용 폭탄 방지 전략 정리**
+  - 토큰 사용량 추적 방법 (입력 토큰 / 출력 토큰 분리 집계)
+  - 사용자별 일일 토큰 한도 설정 + Redis 기반 카운터
+  - 프롬프트 길이 제한 / 응답 max_tokens 제한으로 비용 상한선 설정
+- [ ] **LLM 응답 검증 정리**
+  - AI가 생성한 내용을 그대로 DB 저장 / 코드 실행하면 안 되는 이유
+  - 응답 파싱 실패 / 형식 불일치 / 할루시네이션 대응 전략
+- [ ] 실습: Prompt Injection 공격 재현 및 입력 검증 / 시스템 프롬프트 분리 방어 구현
+- [ ] 실습: 사용자별 토큰 사용량 추적 + 일일 한도 초과 시 429 응답 구현
+- [ ] 실습: 벡터 DB 메타데이터 필터링으로 사용자별 데이터 격리 구현
+
+### 31-6. 외부 API 쿼터 관리
+
+> 한투 Open API / AI API는 분당 요청 수 제한이 있음. 초과 시 계정 차단 또는 비용 폭탄.
+
+- [ ] **외부 API 쿼터 관리 전략 정리**
+  - 클라이언트 → 서버 요청 수 제한 (사용자별 / IP별 Rate Limiting)
+  - 서버 → 외부 API 요청 수 제한 (전역 쿼터 카운터)
+  - 쿼터 초과 시 응답 전략 비교: 즉시 거절(429) / 큐잉 / 캐시 응답
+  - 한투 API 제한 기준 설계 방법
+- [ ] 실습: Redis `INCR` + `EXPIRE` 기반 분당 쿼터 카운터 구현 (한투 API 연동)
+- [ ] 실습: AI API 요청 전 쿼터 잔량 확인 → 초과 시 큐잉 처리 구현
+- [ ] 실습: 쿼터 소진 알림 (임계치 80% 도달 시 Slack / 이메일 발송)
+
+### 31-7. 의존성 & 공급망 보안
+
+- [ ] **의존성 취약점 관리 정리**
+  - Log4Shell 같은 라이브러리 취약점(CVE)이 어떻게 서비스를 뚫는지 원리 이해
+  - OWASP Dependency-Check / Dependabot 동작 방식
+  - 취약한 버전 사용 중인지 확인하는 방법 (`./gradlew dependencyCheckAnalyze`)
+- [ ] **공급망 공격(Supply Chain Attack) 정리**
+  - 오픈소스 라이브러리에 악성 코드가 심어지는 공격 패턴
+  - 방어 전략: 의존성 버전 고정 / 내부 Nexus 미러 운영 / 서명 검증
+- [ ] 실습: Dependabot 설정으로 취약한 의존성 자동 감지 구현
+- [ ] 실습: OWASP Dependency-Check Gradle 플러그인 적용 및 CVE 리포트 생성
+
+### 31-8. 인프라 보안
+
+- [ ] **시크릿 중앙 관리 정리** (HashiCorp Vault / AWS Secrets Manager)
+  - 현재 `.env` 방식의 한계 (파일 유출 시 전체 노출)
+  - Vault로 동적 시크릿 발급 및 자동 갱신하는 원리
+- [ ] **컨테이너 보안 정리**
+  - Docker 이미지 취약점 스캔 (Trivy / Snyk)
+  - non-root 사용자로 컨테이너 실행하는 이유 및 방법
+  - 최소 권한 원칙 (컨테이너별 필요한 권한만 부여)
+- [ ] **네트워크 보안 정리**
+  - AWS Security Group / NACL 설계 원칙
+  - 내부 서비스 간 mTLS 통신 (Istio 연계)
+  - 퍼블릭에 노출하면 안 되는 포트 관리 (DB, Redis, Kafka)
+- [ ] **제로 트러스트(Zero Trust) 아키텍처 정리**
+  - "내부 네트워크라도 믿지 않는다" 원칙
+  - 서비스 간 통신도 인증/인가를 거쳐야 하는 이유
+  - BeyondCorp / Cloudflare Zero Trust 개념
+- [ ] 실습: Docker 이미지 Trivy 취약점 스캔 및 non-root 사용자 설정
+- [ ] 실습: HashiCorp Vault 연동으로 DB 비밀번호 / API 키 동적 주입
+- [ ] 실습: Cloudflare Zero Trust로 관리자 페이지 접근 제어 구현
+
+---
+
 ## 추가 추천 주제 (심화 / 선택)
 
 - [ ] **Flyway 심화**: 대규모 무중단 마이그레이션 전략 (Expand-Contract 패턴)
@@ -1350,3 +1533,4 @@
 | 28 | 성능 테스트 & 분석 & 카오스 엔지니어링 | 🔲 진행 전 |
 | 29 | 장애 대응 & 트러블슈팅 & 유지보수 | 🔲 진행 전 |
 | 30 | 결제 시스템 (PG 연동 / 환불 / 동시 구매 처리) | 🔲 진행 전 |
+| 31 | 보안 심화 (금융 보안 / AI 보안 / 외부 API 쿼터 / 인프라 보안) | 🔲 진행 전 |
