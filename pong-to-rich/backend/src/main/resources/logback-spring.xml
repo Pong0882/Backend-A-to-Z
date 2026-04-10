@@ -1,0 +1,29 @@
+<configuration>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{36}) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 로컬: DEBUG 레벨 (상세 로그) -->
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <logger name="com.pongtorich" level="DEBUG"/>
+        <!-- SQL 로그 끄기 (show-sql: true 대신 필요할 때만 DEBUG로 변경) -->
+        <logger name="org.hibernate.SQL" level="OFF"/>
+        <logger name="org.hibernate.orm.jdbc.bind" level="OFF"/>
+        <logger name="org.hibernate" level="OFF"/>
+    </springProfile>
+
+    <!-- prod: WARN 레벨 (에러/경고만) -->
+    <springProfile name="prod">
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <logger name="com.pongtorich" level="WARN"/>
+    </springProfile>
+
+</configuration>

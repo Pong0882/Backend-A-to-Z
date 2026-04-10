@@ -141,9 +141,63 @@ public boolean validateToken(String token) {
 
 ### AuthService.java
 
-로그인 성공 시 Access Token(30분) + Refresh Token(7일) 동시 발급.
+로그인 성공 시 Access Token(30분) + Refresh Token(7일) 동시 발급. Refresh Token은 DB에 저장.
 
 ```java
 String accessToken = jwtProvider.generateAccessToken(user.getEmail(), user.getRole().name());
 String refreshToken = jwtProvider.generateRefreshToken(user.getEmail());
+
+// 기존 Refresh Token이 있으면 갱신, 없으면 신규 저장
+refreshTokenRepository.findByEmail(user.getEmail())
+        .ifPresentOrElse(
+                existing -> existing.updateToken(refreshToken, expiresAt),
+                () -> refreshTokenRepository.save(RefreshToken.builder()...build())
+        );
 ```
+
+---
+
+## Refresh Token DB 저장 전략
+
+### 왜 Refresh Token만 DB에 저장하는가
+
+| 토큰 | 검증 방식 | 이유 |
+|------|---------|------|
+| Access Token | JWT 서명만으로 검증 (DB 조회 없음) | 수명이 짧아서 탈취 피해 최소화. 빠른 검증 필요 |
+| Refresh Token | DB에서 존재 여부 확인 | 수명이 길어서 탈취/로그아웃 대응 필요 |
+
+### 재발급 흐름 (방식 A — 401 받고 재시도)
+
+```
+클라이언트 → API 요청 → 401 (Access Token 만료)
+    ↓
+클라이언트가 저장해둔 Refresh Token으로 재발급 요청
+POST /api/auth/refresh { "refreshToken": "..." }
+    ↓
+서버: DB에서 토큰 조회 → 만료 여부 확인 → JWT 서명 검증 → 새 Access Token 발급
+    ↓
+클라이언트: 새 Access Token 저장 → 원래 요청 재시도
+```
+
+프론트에서 자동으로 처리하기 때문에 사용자는 401을 보지 않는다.
+
+### 검증을 두 번 하는 이유 (DB + JWT 서명)
+
+```java
+// 1. DB에서 존재 여부 확인 (로그아웃/탈취 대응)
+RefreshToken saved = refreshTokenRepository.findByToken(token)...
+
+// 2. JWT 서명 검증 (변조 여부 확인)
+jwtProvider.validateToken(token);
+```
+
+DB에만 의존하면 변조된 토큰이 우연히 DB에 있는 값과 일치할 경우 통과될 수 있다. JWT 서명 검증까지 해야 완전하다.
+
+### 로그아웃 처리
+
+```java
+// DB에서 Refresh Token 삭제
+refreshTokenRepository.deleteByEmail(email);
+```
+
+JWT는 서버가 상태를 저장하지 않아서 발급된 Access Token을 강제로 무효화할 수 없다. 하지만 Refresh Token을 DB에서 삭제하면 재발급을 막을 수 있어서 실질적인 로그아웃이 된다. (기존 Access Token은 만료시간까지 유효하지만 30분이라 큰 문제 없음)
