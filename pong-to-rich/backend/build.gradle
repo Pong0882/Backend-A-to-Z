@@ -35,6 +35,9 @@ dependencies {
 	// Spring Security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
+	// Actuator — 헬스체크 (/actuator/health), 추후 Prometheus 메트릭 연동 (Phase 25)
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
 	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'

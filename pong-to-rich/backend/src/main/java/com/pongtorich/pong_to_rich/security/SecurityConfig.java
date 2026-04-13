@@ -38,6 +38,7 @@ public class SecurityConfig {
                                 "/stocks.html",
                                 "/logo.png",
                                 "/health",
+                                "/actuator/health",  // CI/CD 헬스체크 (Phase 25 모니터링 연동 예정)
                                 "/api/auth/signup",
                                 "/api/auth/login",
                                 "/api/auth/refresh",

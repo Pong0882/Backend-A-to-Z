@@ -1,0 +1,78 @@
+name: Deploy to Production
+
+# main 브랜치에 push(= PR 머지)될 때만 실행
+on:
+  push:
+    branches: [ main ]
+    # pong-to-rich 관련 파일이 변경됐을 때만 실행 (docs/notes 변경은 배포 불필요)
+    paths:
+      - 'pong-to-rich/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  # ── Job 1: 빌드 & 테스트 (GitHub 호스팅 서버에서 실행) ──────────
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: JDK 17 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Gradle 캐시 설정
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('pong-to-rich/backend/build.gradle') }}
+          restore-keys: gradle-
+
+      - name: Gradle 실행 권한 부여
+        working-directory: pong-to-rich/backend
+        run: chmod +x gradlew
+
+      - name: 빌드 & 테스트
+        working-directory: pong-to-rich/backend
+        # application-local.yml 없이도 빌드되도록 prod 프로파일로 실행
+        # 테스트는 일단 skip (테스트 DB 환경 없음) — 추후 TestContainers 도입 시 제거
+        run: ./gradlew build -x test
+
+  # ── Job 2: 배포 (VM의 Self-hosted Runner에서 실행) ──────────────
+  deploy:
+    name: Deploy
+    runs-on: self-hosted        # VM에 등록된 runner가 이 job을 실행
+    needs: build                # build job 성공 후에만 실행
+
+    steps:
+      - name: 최신 코드 pull
+        working-directory: /home/ubuntu/Backend-A-to-Z
+        run: git pull origin main
+
+      - name: Docker 이미지 재빌드 & 컨테이너 재시작
+        working-directory: /home/ubuntu/Backend-A-to-Z/pong-to-rich
+        run: |
+          docker compose up --build -d
+          docker image prune -f   # 이전 이미지 정리
+
+      - name: 헬스체크 (컨테이너 기동 대기)
+        run: |
+          echo "컨테이너 기동 대기 중..."
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health --max-time 5 || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "헬스체크 성공"
+              exit 0
+            fi
+            echo "대기 중... ($i/12, HTTP $STATUS)"
+            sleep 10
+          done
+          echo "헬스체크 실패 — 컨테이너 로그 확인"
+          docker logs pong-to-rich-app --tail 50
+          exit 1
