@@ -1,26 +1,45 @@
 package com.pongtorich.pong_to_rich.controller;
 
+import com.pongtorich.pong_to_rich.common.ApiResult;
 import com.pongtorich.pong_to_rich.dto.kis.KisStockPriceResponse;
 import com.pongtorich.pong_to_rich.service.StockService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 // @RestController, @PathVariable → notes/phase-7-spring-core/request-mapping.md
+@Tag(name = "Stock", description = "주식 데이터 API")
 @RestController
 @RequestMapping("/api/stocks")
+@RequiredArgsConstructor
 public class StockController {
 
     private final StockService stockService;
 
-    public StockController(StockService stockService) {
-        this.stockService = stockService;
+    // GET /api/stocks/005930 → 삼성전자 현재가 조회
+    @Operation(summary = "주식 현재가 조회")
+    @GetMapping("/{stockCode}")
+    public ResponseEntity<ApiResult<KisStockPriceResponse>> getStockPrice(@PathVariable String stockCode) {
+        return ResponseEntity.ok(ApiResult.ok(stockService.getStockPrice(stockCode)));
     }
 
-    // GET /api/stocks/005930 → 삼성전자 현재가 조회
-    @GetMapping("/{stockCode}")
-    public KisStockPriceResponse getStockPrice(@PathVariable String stockCode) {
-        return stockService.getStockPrice(stockCode);
+    // POST /api/stocks/005930/fetch?startDate=20240101&endDate=20241231
+    // → 기간별 일봉 데이터를 한투 API에서 조회해서 DB에 저장
+    @Operation(
+            summary = "기간별 일봉 데이터 수집",
+            description = "한투 API에서 일봉 데이터를 조회해 DB에 저장. 날짜 형식: yyyyMMdd (ex. 20240101)"
+    )
+    @PostMapping("/{stockCode}/fetch")
+    public ResponseEntity<ApiResult<FetchResult>> fetchDailyPrices(
+            @PathVariable String stockCode,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+
+        int savedCount = stockService.fetchAndSaveDailyPrices(stockCode, startDate, endDate);
+        return ResponseEntity.ok(ApiResult.ok(new FetchResult(stockCode, startDate, endDate, savedCount)));
     }
+
+    public record FetchResult(String stockCode, String startDate, String endDate, int savedCount) {}
 }

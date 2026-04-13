@@ -10,8 +10,8 @@
 | 구분 | 완료 | 미완료 | 합계 |
 |------|------|--------|------|
 | 이론 정리 | 26 | 302 | 328 |
-| 실습 | 9 | 300 | 309 |
-| **전체** | **35** | **602** | **637** |
+| 실습 | 10 | 299 | 309 |
+| **전체** | **36** | **601** | **637** |
 
 > 이 표는 항목 완료 시 수동으로 업데이트한다.
 
@@ -389,7 +389,7 @@
 ### 8-2. RESTful API 구현
 
 - [ ] 실습: RESTful 리소스 설계 원칙에 따른 API 구현 (CRUD)
-- [ ] 실습: 표준 응답 포맷 설계 (`ApiResponse` wrapper, 에러 포맷 통일)
+- [x] 실습: 표준 응답 포맷 설계 (`ApiResponse` wrapper, 에러 포맷 통일) → [정리](./notes/phase-8-rest-api/api-result.md)
 - [ ] 실습: `@ControllerAdvice` + `@ExceptionHandler` 글로벌 예외 처리 구현
 - [ ] 실습: `@Valid` + `BindingResult` 입력 검증 구현
 - [ ] 실습: HATEOAS 적용 (Level 3 REST)
