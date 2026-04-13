@@ -88,73 +88,109 @@ public class StockService {
     // 국내주식 기간별시세 조회 후 DB 저장
     // tr_id: FHKST03010100
     // startDate, endDate: "yyyyMMdd" 형식 (ex. "20240101")
-    // 한 번 호출에 최대 100일치 반환
+    // 한투 API는 한 번 호출에 최대 100건 반환 → 100건씩 페이징하며 전체 기간 수집
     @Transactional
     public int fetchAndSaveDailyPrices(String stockCode, String startDate, String endDate) {
         log.info("[기간별시세] 조회 시작 — 종목: {}, 기간: {} ~ {}", stockCode, startDate, endDate);
 
         String accessToken = kisAuthService.getAccessToken();
+        LocalDate targetStart = LocalDate.parse(startDate, TRADE_DATE_FORMAT);
+        LocalDate currentEnd  = LocalDate.parse(endDate,   TRADE_DATE_FORMAT);
 
-        KisDailyPriceResponse response = restClient.get()
-                .uri(kisConfig.baseUrl()
-                        + "/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice"
-                        + "?FID_COND_MRKT_DIV_CODE=J"
-                        + "&FID_INPUT_ISCD=" + stockCode
-                        + "&FID_INPUT_DATE_1=" + startDate
-                        + "&FID_INPUT_DATE_2=" + endDate
-                        + "&FID_PERIOD_DIV_CODE=D"   // D: 일봉
-                        + "&FID_ORG_ADJ_PRC=0")      // 0: 수정주가
-                .header("Authorization", "Bearer " + accessToken)
-                .header("appkey", kisConfig.appKey())
-                .header("appsecret", kisConfig.appSecret())
-                .header("tr_id", "FHKST03010100")
-                .header("custtype", "P")
-                .retrieve()
-                .body(KisDailyPriceResponse.class);
+        Stock stock = null;
+        int totalSaved = 0;
+        int page = 1;
 
-        if (response == null || !"0".equals(response.rtCd())) {
-            log.warn("[기간별시세] API 실패 — 종목: {}, 메시지: {}",
-                    stockCode, response != null ? response.msg1() : "null");
-            return 0;
-        }
+        // 100건 단위로 페이징 — currentEnd를 이전 배치의 마지막 날짜 - 1일로 당기면서 반복
+        // 반환 건수가 100건 미만이면 startDate에 도달했으므로 종료
+        while (!currentEnd.isBefore(targetStart)) {
+            log.info("[기간별시세] {}페이지 호출 — {} ~ {}", page, startDate, currentEnd.format(TRADE_DATE_FORMAT));
 
-        // stocks 테이블에 종목 없으면 자동 등록
-        String stockName = response.output1().stockName();
-        Stock stock = stockRepository.findByCode(stockCode)
-                .orElseGet(() -> {
-                    log.info("[종목 등록] {} ({})", stockName, stockCode);
-                    return stockRepository.save(Stock.builder()
-                            .code(stockCode)
-                            .name(stockName)
-                            .build());
-                });
+            KisDailyPriceResponse response = restClient.get()
+                    .uri(kisConfig.baseUrl()
+                            + "/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice"
+                            + "?FID_COND_MRKT_DIV_CODE=J"
+                            + "&FID_INPUT_ISCD=" + stockCode
+                            + "&FID_INPUT_DATE_1=" + startDate
+                            + "&FID_INPUT_DATE_2=" + currentEnd.format(TRADE_DATE_FORMAT)
+                            + "&FID_PERIOD_DIV_CODE=D"   // D: 일봉
+                            + "&FID_ORG_ADJ_PRC=0")      // 0: 수정주가
+                    .header("Authorization", "Bearer " + accessToken)
+                    .header("appkey", kisConfig.appKey())
+                    .header("appsecret", kisConfig.appSecret())
+                    .header("tr_id", "FHKST03010100")
+                    .header("custtype", "P")
+                    .retrieve()
+                    .body(KisDailyPriceResponse.class);
 
-        // 일봉 데이터 저장 — 이미 존재하는 날짜는 스킵
-        List<KisDailyPriceResponse.Output2> dailyList = response.output2();
-        int savedCount = 0;
-
-        for (KisDailyPriceResponse.Output2 daily : dailyList) {
-            LocalDate tradeDate = LocalDate.parse(daily.tradeDate(), TRADE_DATE_FORMAT);
-
-            if (stockPriceRepository.existsByStockAndTradeDate(stock, tradeDate)) {
-                continue;
+            if (response == null || !"0".equals(response.rtCd())) {
+                log.warn("[기간별시세] API 실패 — 종목: {}, 메시지: {}",
+                        stockCode, response != null ? response.msg1() : "null");
+                break;
             }
 
-            stockPriceRepository.save(StockPrice.builder()
-                    .stock(stock)
-                    .tradeDate(tradeDate)
-                    .openPrice(Long.parseLong(daily.openPrice()))
-                    .highPrice(Long.parseLong(daily.highPrice()))
-                    .lowPrice(Long.parseLong(daily.lowPrice()))
-                    .closePrice(Long.parseLong(daily.closePrice()))
-                    .volume(Long.parseLong(daily.volume()))
-                    .build());
+            // 첫 번째 페이지에서만 종목 등록 (이후엔 stock이 이미 설정됨)
+            if (stock == null) {
+                String stockName = response.output1().stockName();
+                stock = stockRepository.findByCode(stockCode)
+                        .orElseGet(() -> {
+                            log.info("[종목 등록] {} ({})", stockName, stockCode);
+                            return stockRepository.save(Stock.builder()
+                                    .code(stockCode)
+                                    .name(stockName)
+                                    .build());
+                        });
+            }
 
-            savedCount++;
+            List<KisDailyPriceResponse.Output2> dailyList = response.output2();
+            if (dailyList == null || dailyList.isEmpty()) {
+                log.info("[기간별시세] 반환 데이터 없음 — 종료");
+                break;
+            }
+
+            // 일봉 데이터 저장 — 이미 존재하는 날짜는 스킵
+            int savedInPage = 0;
+            for (KisDailyPriceResponse.Output2 daily : dailyList) {
+                LocalDate tradeDate = LocalDate.parse(daily.tradeDate(), TRADE_DATE_FORMAT);
+
+                if (stockPriceRepository.existsByStockAndTradeDate(stock, tradeDate)) {
+                    continue;
+                }
+
+                stockPriceRepository.save(StockPrice.builder()
+                        .stock(stock)
+                        .tradeDate(tradeDate)
+                        .openPrice(Long.parseLong(daily.openPrice()))
+                        .highPrice(Long.parseLong(daily.highPrice()))
+                        .lowPrice(Long.parseLong(daily.lowPrice()))
+                        .closePrice(Long.parseLong(daily.closePrice()))
+                        .volume(Long.parseLong(daily.volume()))
+                        .build());
+
+                savedInPage++;
+            }
+
+            totalSaved += savedInPage;
+            log.info("[기간별시세] {}페이지 완료 — 저장: {}건 / 반환: {}건 (누적: {}건)",
+                    page, savedInPage, dailyList.size(), totalSaved);
+
+            // 100건 미만이면 startDate 이전까지 모두 수집한 것 → 종료
+            if (dailyList.size() < 100) {
+                break;
+            }
+
+            // 다음 배치: 이번 배치의 가장 오래된 날짜(마지막 항목) - 1일을 새 endDate로
+            LocalDate oldestInPage = LocalDate.parse(
+                    dailyList.get(dailyList.size() - 1).tradeDate(), TRADE_DATE_FORMAT);
+            currentEnd = oldestInPage.minusDays(1);
+            page++;
+
+            // 한투 모의투자 API 레이트 리밋 — 페이지 간 500ms 대기
+            // 실투 API는 초당 20건이나 모의투자는 더 엄격함 (EGW00201 방지)
+            try { Thread.sleep(500); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         }
 
-        log.info("[기간별시세] 저장 완료 — 종목: {}, 저장: {}건 / 전체: {}건",
-                stockCode, savedCount, dailyList.size());
-        return savedCount;
+        log.info("[기간별시세] 전체 완료 — 종목: {}, 총 저장: {}건", stockCode, totalSaved);
+        return totalSaved;
     }
 }
