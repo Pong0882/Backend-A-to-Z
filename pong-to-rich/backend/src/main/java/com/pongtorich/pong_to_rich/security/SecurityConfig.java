@@ -35,11 +35,13 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/index.html",
+                                "/stocks.html",
                                 "/logo.png",
                                 "/health",
                                 "/api/auth/signup",
                                 "/api/auth/login",
                                 "/api/auth/refresh",
+                                "/api/stocks/**",   // 주식 시세 조회는 비로그인도 허용
                                 "/swagger",
                                 "/swagger-ui/**",
                                 "/api-docs/**"

@@ -2,12 +2,15 @@ package com.pongtorich.pong_to_rich.controller;
 
 import com.pongtorich.pong_to_rich.common.ApiResult;
 import com.pongtorich.pong_to_rich.dto.kis.KisStockPriceResponse;
+import com.pongtorich.pong_to_rich.dto.stock.StockPriceResponse;
 import com.pongtorich.pong_to_rich.service.StockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 // @RestController, @PathVariable → notes/phase-7-spring-core/request-mapping.md
 @Tag(name = "Stock", description = "주식 데이터 API")
@@ -23,6 +26,13 @@ public class StockController {
     @GetMapping("/{stockCode}")
     public ResponseEntity<ApiResult<KisStockPriceResponse>> getStockPrice(@PathVariable String stockCode) {
         return ResponseEntity.ok(ApiResult.ok(stockService.getStockPrice(stockCode)));
+    }
+
+    // GET /api/stocks/005930/prices → DB에 저장된 일봉 데이터 조회
+    @Operation(summary = "저장된 일봉 데이터 조회")
+    @GetMapping("/{stockCode}/prices")
+    public ResponseEntity<ApiResult<List<StockPriceResponse>>> getDailyPrices(@PathVariable String stockCode) {
+        return ResponseEntity.ok(ApiResult.ok(stockService.getDailyPrices(stockCode)));
     }
 
     // POST /api/stocks/005930/fetch?startDate=20240101&endDate=20241231

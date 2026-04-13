@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>주식 시세 — Pong to Rich</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #1e2a3a;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto 32px;
+    }
+
+    .back-btn {
+      color: #a0b0c0;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .back-btn:hover { color: #fff; }
+
+    h1 { font-size: 1.6rem; font-weight: 700; }
+
+    .stock-card {
+      max-width: 900px;
+      margin: 0 auto 24px;
+      background: #263445;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .stock-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stock-code { font-size: 0.85rem; color: #a0b0c0; }
+
+    .current-price {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-top: 12px;
+    }
+
+    .change-up   { color: #e74c3c; }
+    .change-down { color: #3498db; }
+    .change-flat { color: #a0b0c0; }
+
+    .price-detail {
+      display: flex;
+      gap: 24px;
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: #a0b0c0;
+    }
+
+    .table-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #263445;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 16px 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-bottom: 1px solid #2c3e50;
+      color: #a0b0c0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead th {
+      padding: 12px 16px;
+      text-align: right;
+      color: #a0b0c0;
+      font-weight: 500;
+      border-bottom: 1px solid #2c3e50;
+    }
+
+    thead th:first-child { text-align: left; }
+
+    tbody tr:hover { background: #2c3e50; }
+
+    tbody td {
+      padding: 10px 16px;
+      text-align: right;
+      border-bottom: 1px solid #1e2a3a;
+    }
+
+    tbody td:first-child { text-align: left; color: #a0b0c0; }
+
+    .loading { text-align: center; padding: 48px; color: #a0b0c0; }
+    .error   { text-align: center; padding: 48px; color: #e74c3c; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <a href="/" class="back-btn">← 홈으로</a>
+    <h1>주식 시세</h1>
+  </div>
+
+  <!-- 현재가 카드 -->
+  <div class="stock-card" id="currentCard">
+    <div class="loading">현재가 불러오는 중...</div>
+  </div>
+
+  <!-- 일봉 테이블 -->
+  <div class="table-wrap">
+    <div class="table-header">일봉 데이터 (삼성전자 · 005930)</div>
+    <div id="tableArea">
+      <div class="loading">데이터 불러오는 중...</div>
+    </div>
+  </div>
+
+  <script>
+    const STOCK_CODE = '005930';
+
+    // 숫자 포맷 (1000 → 1,000)
+    const fmt = n => Number(n).toLocaleString('ko-KR');
+
+    // 전일 대비 부호 → 클래스 / 텍스트
+    function changeInfo(sign, amount, rate) {
+      const cls  = sign === '2' || sign === '1' ? 'change-up'
+                 : sign === '4' || sign === '5' ? 'change-down'
+                 : 'change-flat';
+      const arrow = sign === '2' || sign === '1' ? '▲'
+                  : sign === '4' || sign === '5' ? '▼' : '-';
+      return { cls, text: `${arrow} ${fmt(Math.abs(amount))} (${rate}%)` };
+    }
+
+    // 최신 일봉 데이터로 현재가 카드 구성 (한투 API 직접 호출 X)
+    function renderCurrentCard(prices) {
+      if (!prices || prices.length === 0) {
+        document.getElementById('currentCard').innerHTML =
+          `<div class="error">현재가 데이터가 없습니다.</div>`;
+        return;
+      }
+
+      const latest = prices[0];   // 최신 일봉
+      const prev   = prices[1];   // 전일 일봉
+
+      const diff   = prev ? latest.closePrice - prev.closePrice : 0;
+      const rate   = prev ? ((diff / prev.closePrice) * 100).toFixed(2) : '0.00';
+      const cls    = diff > 0 ? 'change-up' : diff < 0 ? 'change-down' : 'change-flat';
+      const arrow  = diff > 0 ? '▲' : diff < 0 ? '▼' : '-';
+
+      document.getElementById('currentCard').innerHTML = `
+        <div class="stock-name">삼성전자</div>
+        <div class="stock-code">${STOCK_CODE} · 기준일: ${latest.tradeDate}</div>
+        <div class="current-price">${fmt(latest.closePrice)} <small style="font-size:1rem">원</small></div>
+        <div class="price-detail">
+          <span class="${cls}">${arrow} ${fmt(Math.abs(diff))} (${rate}%)</span>
+          <span>고가 ${fmt(latest.highPrice)}</span>
+          <span>저가 ${fmt(latest.lowPrice)}</span>
+          <span>거래량 ${fmt(latest.volume)}</span>
+        </div>
+      `;
+    }
+
+    // 현재가 API 호출
+    async function loadCurrentPrice() {
+      try {
+        const res  = await fetch(`/api/stocks/${STOCK_CODE}`);
+        const json = await res.json();
+        const d    = json.data;
+
+        if (!d || !d.stck_prpr) {
+          renderCurrentCard(null);
+          return;
+        }
+
+        const { cls, text } = changeInfo(d.prdy_vrss_sign, d.prdy_vrss, d.prdy_ctrt);
+
+        document.getElementById('currentCard').innerHTML = `
+          <div class="stock-name">삼성전자</div>
+          <div class="stock-code">${STOCK_CODE} · 실시간</div>
+          <div class="current-price ${cls}">${fmt(d.stck_prpr)} <small style="font-size:1rem">원</small></div>
+          <div class="price-detail">
+            <span class="${cls}">${text}</span>
+            <span>고가 ${fmt(d.stck_hgpr)}</span>
+            <span>저가 ${fmt(d.stck_lwpr)}</span>
+            <span>거래량 ${fmt(d.acml_vol)}</span>
+          </div>
+        `;
+      } catch (e) {
+        // KIS API 실패 시 일봉 데이터로 폴백 (loadDailyPrices에서 처리)
+        document.getElementById('currentCard').innerHTML =
+          `<div class="loading">현재가 불러오는 중...</div>`;
+      }
+    }
+
+    // 일봉 데이터 API 호출
+    async function loadDailyPrices() {
+      try {
+        const res  = await fetch(`/api/stocks/${STOCK_CODE}/prices`);
+        const json = await res.json();
+        const list = json.data;
+
+        if (!list || list.length === 0) {
+          document.getElementById('tableArea').innerHTML =
+            `<div class="error">저장된 데이터가 없습니다.</div>`;
+          renderCurrentCard(null);
+          return;
+        }
+
+        // 현재가 카드가 아직 로딩 중이면 일봉 데이터로 폴백
+        const card = document.getElementById('currentCard');
+        if (card.querySelector('.loading')) {
+          renderCurrentCard(list);
+        }
+
+        const rows = list.map(d => `
+          <tr>
+            <td>${d.tradeDate}</td>
+            <td>${fmt(d.openPrice)}</td>
+            <td>${fmt(d.highPrice)}</td>
+            <td>${fmt(d.lowPrice)}</td>
+            <td>${fmt(d.closePrice)}</td>
+            <td>${fmt(d.volume)}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('tableArea').innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>시가</th>
+                <th>고가</th>
+                <th>저가</th>
+                <th>종가</th>
+                <th>거래량</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      } catch (e) {
+        document.getElementById('tableArea').innerHTML =
+          `<div class="error">데이터 조회 실패</div>`;
+      }
+    }
+
+    loadCurrentPrice();
+    loadDailyPrices();
+  </script>
+
+</body>
+</html>

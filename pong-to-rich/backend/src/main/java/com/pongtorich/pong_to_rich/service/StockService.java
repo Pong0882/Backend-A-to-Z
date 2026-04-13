@@ -8,6 +8,7 @@ import com.pongtorich.pong_to_rich.domain.stock.StockPriceRepository;
 import com.pongtorich.pong_to_rich.domain.stock.StockRepository;
 import com.pongtorich.pong_to_rich.dto.kis.KisDailyPriceResponse;
 import com.pongtorich.pong_to_rich.dto.kis.KisStockPriceResponse;
+import com.pongtorich.pong_to_rich.dto.stock.StockPriceResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 // @Service → notes/phase-7-spring-core/spring-layers.md
 @Slf4j
@@ -69,6 +71,18 @@ public class StockService {
         // Jackson 직렬화 → notes/phase-7-spring-core/jackson-serialization.md
         Object output = response.get("output");
         return objectMapper.convertValue(output, KisStockPriceResponse.class);
+    }
+
+    // DB에 저장된 일봉 데이터 조회 (최신순)
+    @Transactional(readOnly = true)
+    public List<StockPriceResponse> getDailyPrices(String stockCode) {
+        Stock stock = stockRepository.findByCode(stockCode)
+                .orElseThrow(() -> new IllegalArgumentException("종목을 찾을 수 없습니다: " + stockCode));
+
+        return stockPriceRepository.findByStockOrderByTradeDateDesc(stock)
+                .stream()
+                .map(StockPriceResponse::from)
+                .collect(Collectors.toList());
     }
 
     // 국내주식 기간별시세 조회 후 DB 저장
