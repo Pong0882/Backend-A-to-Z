@@ -106,10 +106,10 @@ multipass launch --name monitoring-server --cpus 1 --memory 1500M --disk 10G
 
 생성 결과:
 ```
-monitoring-server  Running  172.24.122.19  Ubuntu 24.04 LTS
+monitoring-server  Running  172.24.xxx.xxx  Ubuntu 24.04 LTS
 ```
 
-같은 `172.24.x.x` 대역이라 pong-server(`172.24.126.133`)와 통신 가능하다.
+같은 `172.24.x.x` 대역이라 pong-server(`172.24.xxx.xxx`)와 통신 가능하다.
 
 ---
 
@@ -199,7 +199,7 @@ Cloudflare 터널 서브도메인을 추가하는 방법이 두 가지다.
 
 prometheus.yml에 pong-server IP를 직접 쓰면 GitHub에 올라갔을 때 내부 네트워크 구조가 노출된다.
 
-`172.24.126.133`은 Multipass 내부 사설 IP라 인터넷에서 접근이 불가능해서 실질적 위험은 없지만, 그래도 개선 방법을 고민했다.
+`172.24.xxx.xxx`은 Multipass 내부 사설 IP라 인터넷에서 접근이 불가능해서 실질적 위험은 없지만, 그래도 개선 방법을 고민했다.
 
 **검토한 방법들:**
 
@@ -214,7 +214,7 @@ prometheus.yml에 pong-server IP를 직접 쓰면 GitHub에 올라갔을 때 내
 
 ```
 prometheus.yml.template  ← git에 올라감 (${PONG_SERVER_IP})
-.env                     ← git 제외 (PONG_SERVER_IP=172.24.126.133)
+.env                     ← git 제외 (PONG_SERVER_IP=172.24.xxx.xxx)
 start.sh 실행 시         → envsubst로 prometheus.yml 생성 → docker compose up
 ```
 
@@ -292,7 +292,7 @@ JVM 힙 메모리, GC, HTTP 요청수/응답시간, HikariCP 커넥션풀, CPU, 
 
 Prometheus 타겟이 UP인 걸 확인하다가 `/actuator/prometheus` 가 외부에서도 접근 가능하다는 걸 발견했다.
 
-`172.24.126.133:8080` 은 Multipass 사설 IP라 인터넷에서 직접 접근은 불가능하지만, Cloudflare 터널을 통해 `pongtrader.pro/actuator/prometheus` 로 접근하면 서버 내부 메트릭이 노출된다.
+`172.24.xxx.xxx:8080` 은 Multipass 사설 IP라 인터넷에서 직접 접근은 불가능하지만, Cloudflare 터널을 통해 `pongtrader.pro/actuator/prometheus` 로 접근하면 서버 내부 메트릭이 노출된다.
 
 **화이트리스트 정책 적용:**
 ```java
@@ -397,31 +397,221 @@ pong-server의 `pong-compose.service` 와 완전히 동일한 구조다.
 
 ---
 
+## Promtail 설치 — 로그 수집
+
+Prometheus는 monitoring-server에서 pong-server를 **pull**하는 방식이지만, Loki는 반대로 pong-server에서 monitoring-server로 **push**하는 방식이다. 그래서 Promtail을 앱 서버 쪽에 설치해야 한다.
+
+pong-server의 `docker-compose.yml`에 Promtail 서비스 추가:
+
+```yaml
+promtail:
+  image: grafana/promtail:latest
+  container_name: pong-promtail
+  volumes:
+    - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+    - /var/lib/docker/containers:/var/lib/docker/containers:ro  # 컨테이너 로그 읽기
+    - /var/run/docker.sock:/var/run/docker.sock                 # 컨테이너 목록 조회
+  environment:
+    LOKI_URL: ${LOKI_URL}
+  command: -config.file=/etc/promtail/config.yml -config.expand-env=true
+```
+
+`promtail-config.yml`에서 `docker_sd_configs`로 컨테이너를 자동 감지하고, `pong-to-rich-app` 컨테이너만 필터링해서 Loki로 전송한다.
+
+---
+
+## Loki → Grafana 연결
+
+Grafana에서 Loki 데이터소스 추가:
+
+```
+Connections → Data sources → Add data source → Loki
+URL: http://pong-loki:3100
+```
+
+같은 docker-compose 네트워크 안에 있어서 컨테이너 이름으로 접근한다. IP 직접 입력하면 Grafana 쪽에서 URL validation 에러가 났었다 → 컨테이너 이름으로 해결.
+
+Explore에서 LogQL 쿼리:
+```
+{container="/pong-to-rich-app"}
+```
+
+로그가 찍히기 시작했다. 근데 `[로그인] 완료` 같은 앱 로그는 안 보이고 `WARN` 레벨 로그만 뜨는 문제가 있었다.
+
+---
+
+## prod 로그 레벨 문제
+
+`docker logs pong-to-rich-app` 로 확인하니 `WARN` 레벨 로그만 찍히고 `log.info`가 하나도 없었다.
+
+원인은 `logback-spring.xml` 설정이었다:
+
+```xml
+<!-- 수정 전 -->
+<springProfile name="prod">
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+    <logger name="com.pongtorich" level="WARN"/>  <!-- INFO 로그 전부 차단 -->
+</springProfile>
+```
+
+prod에서 `com.pongtorich` 레벨을 `WARN`으로 설정해둬서 `log.info`가 아예 안 찍혔던 것.
+
+**실무 표준 패턴으로 수정:**
+
+```xml
+<!-- 수정 후 -->
+<springProfile name="prod">
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+    <logger name="com.pongtorich" level="INFO"/>  <!-- 내 앱 코드만 INFO -->
+</springProfile>
+```
+
+- `root WARN` 유지 → Hibernate, Spring 내부 노이즈 차단
+- `com.pongtorich INFO` → 내 비즈니스 로직 로그만 수집
+
+`DEBUG`는 prod에서 쓰지 않는다. DB 쿼리 파라미터, 세션 정보 등 민감한 것도 섞이고 로그 양이 너무 많아진다.
+
+push → CI/CD 자동 배포 후 확인하니 `[로그인] 시도`, `[로그인] 완료` 로그가 Grafana Loki에 정상적으로 찍혔다.
+
+---
+
+## Loki 패널을 19004 대시보드에 추가
+
+Prometheus 메트릭 대시보드(19004)에 Loki 로그 패널을 추가해서 한 화면에서 메트릭 + 로그를 같이 볼 수 있게 만들었다.
+
+```
+대시보드 우측 상단 Add → Visualization
+Data source: Loki
+Query: {container="/pong-to-rich-app"}
+Visualization type: Logs
+```
+
+이제 HTTP 요청수/응답시간 그래프 아래에서 실시간 앱 로그를 같이 볼 수 있다. 부하 테스트할 때 메트릭 변화와 로그를 동시에 확인할 수 있어서 유용할 것 같다.
+
+![Grafana 메트릭 + 로그 통합 대시보드](https://github.com/user-attachments/assets/b54d5a22-991a-4f25-9500-7a0a3b34b299)
+
+---
+
 ## 최종 인프라 구성
 
 ```
 로컬 Windows PC
 ├── Multipass VM: pong-server (Ubuntu 24.04, CPU 2, 메모리 4GB)
 │   ├── Docker: Spring Boot 앱 + MySQL
+│   ├── Docker: Promtail → monitoring-server Loki로 로그 push
 │   ├── cloudflared (systemd) → pongtrader.pro, grafana.pongtrader.pro 터널
 │   └── /actuator/prometheus → 172.24.0.0/16 대역만 접근 허용 (화이트리스트)
 │
 └── Multipass VM: monitoring-server (Ubuntu 24.04, CPU 1, 메모리 1.5GB)
     └── Docker: Prometheus + Grafana + Loki (systemd 자동 실행)
         ├── Prometheus → pong-server:8080/actuator/prometheus 15초마다 스크랩 (pull)
-        ├── Grafana → grafana.pongtrader.pro (Cloudflare 터널)
-        └── Loki → 로그 수집 대기
+        ├── Grafana → grafana.pongtrader.pro (메트릭 + 로그 한 대시보드)
+        └── Loki → Promtail에서 push된 로그 저장
 ```
 
-외부에서 `grafana.pongtrader.pro` 접속 → Cloudflare 터널 → pong-server cloudflared → monitoring-server:3000 → Grafana
+---
+
+## Grafana Alert → 슬랙 연결
+
+### 슬랙 Incoming Webhook 발급
+
+슬랙 워크스페이스(`pong-monitoring`) 생성 후 `#monitoring` 채널 연결.
+`https://api.slack.com/apps` → Incoming Webhooks → Webhook URL 발급.
+
+### Grafana Contact point 설정
+
+```
+Alerting → Contact points → Add contact point
+Name: slack-monitoring
+Integration: Slack
+Webhook URL: https://hooks.slack.com/services/...
+```
+
+Test 버튼으로 슬랙 메시지 수신 확인.
+
+### Notification policy 연결
+
+```
+Alerting → Notification policies → Default policy → Edit
+Default contact point: slack-monitoring
+```
+
+이 설정이 없으면 Alert Rule이 발동해도 슬랙으로 안 간다. Alert Rule → Notification Policy → Contact point 순서로 라우팅된다.
+
+### Alert Rule 4개 설정
+
+| 알림 | 쿼리 | 조건 | Pending |
+|------|------|------|---------|
+| 앱 다운 감지 | `up{job="pong-to-rich"}` | < 1 | 즉시 |
+| JVM 힙 메모리 경고 | 힙 사용률 % | > 80 | 2m |
+| DB 커넥션 고갈 경고 | 커넥션 사용률 % | > 80 | 1m |
+| 5xx 에러 급증 | `rate(http_server_requests_seconds_count{status=~"5.."}[5m])` | > 0.1 | 2m |
+
+**Pending period를 두는 이유:** 순간 스파이크에 오알람 방지. 조건이 지속적으로 유지될 때만 알림 발송.
+
+**5xx No data 처리:** 앱이 꺼지면 5xx 데이터 자체가 없어서 `DatasourceNoData` 오알람 발동됨. `Configure no data → Normal`로 설정해서 해결.
+
+### 동작 확인
+
+```bash
+docker compose stop app   # 앱 다운
+# 1~2분 후 슬랙에 FIRING 알림 수신
+
+docker compose start app  # 앱 복구
+# 5분 후 슬랙에 RESOLVED 알림 수신
+```
+
+슬랙 알림:
+```
+[FIRING:1] 앱 다운 감지 pong-alerts
+Value: A=0, C=1
+
+[RESOLVED] 앱 다운 감지 pong-alerts
+Value: A=1, C=0
+```
+
+---
+
+## P95 응답시간 패널 추가
+
+부하 테스트 때 DB vs Redis 성능 차이를 보기 위해 P95 응답시간 패널 추가.
+
+**P95란:** 전체 요청 중 상위 5% 느린 요청의 응답시간. 평균만 보면 일부 사용자가 느린 걸 놓칠 수 있어서 성능 측정 시 평균보다 P95/P99가 더 중요하다.
+
+```
+histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job="pong-to-rich"}[5m])) by (le, uri))
+```
+
+지금은 트래픽이 없어서 데이터가 없지만, 부하 테스트 시 실시간으로 찍힌다.
+
+---
+
+## 최종 인프라 구성
+
+```
+로컬 Windows PC
+├── Multipass VM: pong-server (Ubuntu 24.04, CPU 2, 메모리 4GB)
+│   ├── Docker: Spring Boot 앱 + MySQL
+│   ├── Docker: Promtail → monitoring-server Loki로 로그 push
+│   ├── cloudflared (systemd) → pongtrader.pro, grafana.pongtrader.pro 터널
+│   └── /actuator/prometheus → 172.24.0.0/16 대역만 접근 허용 (화이트리스트)
+│
+└── Multipass VM: monitoring-server (Ubuntu 24.04, CPU 1, 메모리 1.5GB)
+    └── Docker: Prometheus + Grafana + Loki (systemd 자동 실행)
+        ├── Prometheus → pong-server:8080/actuator/prometheus 15초마다 스크랩 (pull)
+        ├── Grafana → grafana.pongtrader.pro (메트릭 + 로그 + P95 통합 대시보드)
+        ├── Loki → Promtail에서 push된 로그 저장
+        └── Alert Rules → 슬랙 #monitoring 채널 알림
+```
 
 ---
 
 ## 다음에 할 것
 
-- SecurityConfig 화이트리스트 커밋 + 푸시 (CI/CD 배포)
 - VM 재시작 시 IP 변경 문제 해결 (pong-server.mshome.net 테스트)
 - k6 설치 + DB 상태 성능 측정
 - Redis 전환 후 성능 비교
-- Grafana Alert → 슬랙 연결
-- Promtail 설치 (pong-server 로그 → Loki로 수집)
