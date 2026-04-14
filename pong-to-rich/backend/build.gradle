@@ -35,8 +35,12 @@ dependencies {
 	// Spring Security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
-	// Actuator — 헬스체크 (/actuator/health), 추후 Prometheus 메트릭 연동 (Phase 25)
+	// Actuator — 헬스체크 (/actuator/health), Prometheus 메트릭 연동
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// Micrometer Prometheus — /actuator/prometheus 엔드포인트로 메트릭 노출
+	// Prometheus가 이 엔드포인트를 주기적으로 스크랩해서 시계열 데이터 수집
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'

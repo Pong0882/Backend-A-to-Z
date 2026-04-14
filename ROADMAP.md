@@ -9,9 +9,9 @@
 
 | 구분 | 완료 | 미완료 | 합계 |
 |------|------|--------|------|
-| 이론 정리 | 27 | 301 | 328 |
+| 이론 정리 | 28 | 300 | 328 |
 | 실습 | 12 | 297 | 309 |
-| **전체** | **39** | **598** | **637** |
+| **전체** | **40** | **597** | **637** |
 
 > 이 표는 항목 완료 시 수동으로 업데이트한다.
 
@@ -324,7 +324,7 @@
 - [x] **Bean 등록/설정**: `@Component` / `@Service` / `@Repository` / `@Controller` / `@Configuration` / `@Bean` 차이 → [정리](./notes/phase-7-spring-core/spring-layers.md)
 - [x] **DI 관련**: `@Value` / `@ConfigurationProperties` → [정리](./notes/phase-7-spring-core/configuration-properties.md)
 - [x] **요청 처리**: `@RequestMapping` / `@GetMapping` 등 / `@PathVariable` / `@RequestParam` / `@RequestBody` / `@ResponseBody` → [정리](./notes/phase-7-spring-core/request-mapping.md)
-- [ ] **트랜잭션**: `@Transactional` 속성 전체 (propagation / isolation / readOnly / rollbackFor / timeout)
+- [x] **트랜잭션**: `@Transactional` 속성 전체 (propagation / isolation / readOnly / rollbackFor / timeout) → [정리](./notes/phase-7-spring-core/transactional.md)
 - [ ] **스케줄링**: `@Scheduled` / `@EnableScheduling` / cron 표현식
 - [ ] **비동기**: `@Async` / `@EnableAsync` 동작 원리
 - [ ] **이벤트**: `@EventListener` / `@TransactionalEventListener` 차이

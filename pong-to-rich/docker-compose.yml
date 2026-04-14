@@ -48,6 +48,9 @@ services:
   # kafka:          ← Phase 16 (Kafka) 때 추가
   # elasticsearch:  ← Phase 16 (ES) 때 추가
 
+  # prometheus, grafana → monitoring-server VM에서 별도 docker-compose로 실행
+  # monitoring/docker-compose.yml 참고
+
 networks:
   pong-network:
     driver: bridge

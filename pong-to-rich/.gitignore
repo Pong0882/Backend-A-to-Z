@@ -2,3 +2,6 @@
 .env
 .env.*
 !.env.example
+
+# monitoring — template에서 생성되는 파일 (IP 포함)
+monitoring/prometheus.yml

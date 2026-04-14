@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s      # 15초마다 메트릭 수집
+  evaluation_interval: 15s  # 15초마다 알림 규칙 평가
+
+scrape_configs:
+
+  # Spring Boot 애플리케이션 메트릭 수집
+  # /actuator/prometheus 엔드포인트를 주기적으로 호출해서 데이터 가져옴
+  - job_name: 'pong-to-rich'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['${PONG_SERVER_IP}:8080']  # pong-server IP (.env에서 설정)

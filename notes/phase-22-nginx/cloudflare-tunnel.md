@@ -140,6 +140,93 @@ sudo systemctl status cloudflared
 
 ---
 
+## 서브도메인 방식
+
+### 포트 방식 vs 서브도메인 방식
+
+서비스가 여러 개일 때 외부에서 접근하는 방법이 두 가지다.
+
+**포트 방식**
+```
+pongtrader.pro:8080  → Spring Boot 앱
+pongtrader.pro:3000  → Grafana
+pongtrader.pro:9090  → Prometheus
+```
+
+**서브도메인 방식**
+```
+pongtrader.pro             → Spring Boot 앱
+grafana.pongtrader.pro     → Grafana
+prometheus.pongtrader.pro  → Prometheus
+```
+
+### 서브도메인을 쓰는 이유
+
+**1. 포트를 외부에 열 필요가 없다**
+
+포트 방식은 방화벽에서 3000, 9090 포트를 직접 열어야 한다.
+열린 포트는 스캐닝 대상이 되고 공격면이 넓어진다.
+
+Cloudflare 터널은 VM이 아웃바운드로 먼저 연결하는 구조라 포트를 아예 안 열어도 된다.
+서브도메인을 추가해도 새 포트를 열 필요 없이 터널 설정만 추가하면 된다.
+
+**2. HTTPS가 자동으로 된다**
+
+`pongtrader.pro:3000` 은 HTTP다. HTTPS로 만들려면 포트마다 인증서를 따로 발급해야 한다.
+
+Cloudflare는 `*.pongtrader.pro` 와일드카드 인증서를 자동으로 처리한다.
+서브도메인을 몇 개를 추가해도 HTTPS가 자동 적용된다.
+
+**3. 서비스별로 접근 제어를 다르게 걸 수 있다**
+
+```
+pongtrader.pro          → 누구나 접근 가능
+grafana.pongtrader.pro  → Cloudflare Access로 인증된 사람만
+```
+
+Cloudflare Access를 쓰면 서브도메인 단위로 이메일 인증, GitHub 로그인 등을 요구할 수 있다.
+포트 방식은 포트를 열거나 닫는 것 외에 이런 세밀한 제어가 어렵다.
+
+**4. URL이 서비스처럼 보인다**
+
+`grafana.pongtrader.pro` vs `pongtrader.pro:3000` — 실제 서비스 URL처럼 보이고 기억하기 쉽다.
+
+### Cloudflare 터널에 서브도메인 추가하는 방법
+
+**Zero Trust 대시보드 방식 (GUI)**
+
+```
+Zero Trust → Networks → Tunnels → 터널 선택
+→ Public Hostname → Add a public hostname
+
+Subdomain : grafana
+Domain    : pongtrader.pro
+Service   : http://localhost:3000
+```
+
+저장하면 Cloudflare DNS에 CNAME 레코드가 자동 생성된다.
+가비아 등 도메인 등록 기관은 건드릴 필요 없다.
+네임서버를 Cloudflare로 위임한 이후로는 DNS 관리가 전부 Cloudflare에서 이루어지기 때문이다.
+
+**config.yml 방식 (파일)**
+
+```yaml
+ingress:
+  - hostname: pongtrader.pro
+    service: http://localhost:8080
+  - hostname: grafana.pongtrader.pro   # 서브도메인 추가
+    service: http://localhost:3000
+  - service: http_status:404
+```
+
+추가 후 DNS 레코드도 등록:
+```bash
+cloudflared tunnel route dns <터널명> grafana.pongtrader.pro
+sudo systemctl restart cloudflared
+```
+
+---
+
 ## pong-to-rich 인프라 구성
 
 ```
