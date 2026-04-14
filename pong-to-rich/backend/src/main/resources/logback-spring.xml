@@ -18,12 +18,12 @@
         <logger name="org.hibernate" level="OFF"/>
     </springProfile>
 
-    <!-- prod: WARN 레벨 (에러/경고만) -->
+    <!-- prod: 앱 로그는 INFO, 프레임워크는 WARN -->
     <springProfile name="prod">
         <root level="WARN">
             <appender-ref ref="CONSOLE"/>
         </root>
-        <logger name="com.pongtorich" level="WARN"/>
+        <logger name="com.pongtorich" level="INFO"/>
     </springProfile>
 
 </configuration>
