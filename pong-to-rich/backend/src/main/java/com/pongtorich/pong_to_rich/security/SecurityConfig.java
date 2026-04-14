@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -39,7 +40,6 @@ public class SecurityConfig {
                                 "/logo.png",
                                 "/health",
                                 "/actuator/health",       // CI/CD 헬스체크
-                                "/actuator/prometheus",   // Prometheus 메트릭 스크랩
                                 "/api/auth/signup",
                                 "/api/auth/login",
                                 "/api/auth/refresh",
@@ -48,6 +48,10 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/api-docs/**"
                         ).permitAll()
+                        // Prometheus 메트릭 — 내부 VM 네트워크(172.24.x.x)에서만 접근 가능 (화이트리스트)
+                        .requestMatchers("/actuator/prometheus")
+                                .access(new WebExpressionAuthorizationManager("hasIpAddress('172.24.0.0/16')"))
+
                         // logout은 유효한 토큰이 있어야 호출 가능
                         .requestMatchers("/api/auth/logout").authenticated()
                         .anyRequest().authenticated()

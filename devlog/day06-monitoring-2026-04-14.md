@@ -264,13 +264,164 @@ management:
 
 ---
 
+## Grafana 대시보드 연결
+
+### Prometheus 데이터소스 연결
+
+```
+좌측 메뉴 → Connections → Data sources → Add data source → Prometheus
+URL: http://pong-prometheus:9090
+```
+
+같은 docker-compose 네트워크(`monitoring_default`) 안에 있어서 컨테이너 이름으로 접근 가능하다.
+IP가 바뀌어도 컨테이너 이름은 고정이라 신경 안 써도 된다.
+
+→ **Successfully queried the Prometheus API** 확인
+
+### 대시보드 임포트
+
+처음에 ID `4701` (JVM 대시보드)로 임포트했는데 Instance 드롭다운 선택이 안 되고 데이터가 안 뜨는 문제가 있었다.
+
+Spring Boot 3.x 전용 대시보드 ID `19004` 로 변경하니 정상 동작했다.
+
+![Grafana Spring Boot 대시보드](https://github.com/user-attachments/assets/da8e3aad-b171-463f-bae3-b813d61ce733)
+
+JVM 힙 메모리, GC, HTTP 요청수/응답시간, HikariCP 커넥션풀, CPU, 스레드 상태가 한눈에 보인다.
+
+### /actuator/prometheus 화이트리스트 적용
+
+Prometheus 타겟이 UP인 걸 확인하다가 `/actuator/prometheus` 가 외부에서도 접근 가능하다는 걸 발견했다.
+
+`172.24.126.133:8080` 은 Multipass 사설 IP라 인터넷에서 직접 접근은 불가능하지만, Cloudflare 터널을 통해 `pongtrader.pro/actuator/prometheus` 로 접근하면 서버 내부 메트릭이 노출된다.
+
+**화이트리스트 정책 적용:**
+```java
+// 내부 VM 네트워크(172.24.x.x)에서만 접근 가능
+.requestMatchers("/actuator/prometheus")
+    .access(new WebExpressionAuthorizationManager("hasIpAddress('172.24.0.0/16')"))
+```
+
+화이트리스트는 "허용할 것만 명시, 나머지 전부 차단" 하는 방식이다.
+블랙리스트("막을 것만 명시")는 막아야 할 걸 다 알고 있어야 해서 현실적으로 불가능하다.
+Zero Trust 철학과 같다 — 기본적으로 아무도 믿지 않고, 명시적으로 허용된 것만 통과.
+
+---
+
+## 트러블슈팅
+
+### cloudflared config 파일 경로 문제
+
+`grafana.pongtrader.pro` 추가 후 접속이 안 됐다.
+
+**상황:** `~/.cloudflared/config.yml` 을 수정했는데 반영이 안 됨
+
+**원인:**
+```
+~/.cloudflared/config.yml    → 수동 실행용
+/etc/cloudflared/config.yml  → systemd 서비스가 읽는 실제 파일
+```
+
+`cloudflared service install` 로 systemd 등록할 때 `/etc/cloudflared/` 에 파일이 복사되어 거기서 관리된다. 홈 디렉토리 파일을 수정해도 서비스에 반영이 안 됐던 것.
+
+**해결:** `/etc/cloudflared/config.yml` 에 grafana 줄 추가 후 `sudo systemctl restart cloudflared`
+
+앞으로 설정 변경은 `/etc/cloudflared/config.yml` 만 수정한다.
+
+---
+
+## monitoring-server systemd 자동 실행 등록
+
+컴퓨터를 껐다 켜도 monitoring-server VM이 자동으로 올라오게 설정했다.
+
+### 서비스 파일 생성
+
+```bash
+sudo tee /etc/systemd/system/monitoring-compose.service <<EOF
+[Unit]
+Description=Monitoring Stack (Prometheus + Grafana + Loki)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/ubuntu/Backend-A-to-Z/pong-to-rich/monitoring
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+User=ubuntu
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+**각 항목 설명:**
+
+`tee` 는 파일을 생성하고 내용을 쓰는 명령어다. `<<EOF ~ EOF` 는 여러 줄을 한번에 입력하는 heredoc 문법이다. `/etc/systemd/system/` 은 시스템 디렉토리라 `sudo` 가 필요하다.
+
+```
+[Unit]
+Requires=docker.service  → docker가 먼저 떠야 실행 가능
+After=docker.service     → docker 뜬 후에 실행
+
+[Service]
+Type=oneshot             → 명령어 한 번 실행하고 끝나는 타입
+RemainAfterExit=yes      → 명령어 끝나도 서비스가 active 상태 유지
+                           (docker compose up -d는 백그라운드 실행 후 바로 종료됨)
+WorkingDirectory         → docker-compose.yml, .env 파일이 있는 경로
+ExecStart                → 시작 시 실행 (docker compose up -d)
+ExecStop                 → 중지 시 실행 (docker compose down)
+User=ubuntu              → ubuntu 유저 권한으로 실행 (docker 그룹 멤버)
+
+[Install]
+WantedBy=multi-user.target → 일반 부팅 시 자동 실행
+```
+
+### 서비스 등록 및 실행
+
+```bash
+sudo systemctl daemon-reload      # 새 서비스 파일 읽도록 systemd에 알림
+sudo systemctl enable monitoring-compose  # 부팅 시 자동 실행 등록
+sudo systemctl start monitoring-compose   # 지금 당장 실행
+sudo systemctl status monitoring-compose  # 상태 확인
+```
+
+**결과:**
+```
+Active: active (exited)
+```
+
+`active (exited)` 는 정상이다. `Type=oneshot` 이라 `docker compose up -d` 명령어가 성공적으로 실행되고 종료된 상태다. 컨테이너는 백그라운드에서 계속 실행 중이다.
+
+pong-server의 `pong-compose.service` 와 완전히 동일한 구조다.
+
+---
+
+## 최종 인프라 구성
+
+```
+로컬 Windows PC
+├── Multipass VM: pong-server (Ubuntu 24.04, CPU 2, 메모리 4GB)
+│   ├── Docker: Spring Boot 앱 + MySQL
+│   ├── cloudflared (systemd) → pongtrader.pro, grafana.pongtrader.pro 터널
+│   └── /actuator/prometheus → 172.24.0.0/16 대역만 접근 허용 (화이트리스트)
+│
+└── Multipass VM: monitoring-server (Ubuntu 24.04, CPU 1, 메모리 1.5GB)
+    └── Docker: Prometheus + Grafana + Loki (systemd 자동 실행)
+        ├── Prometheus → pong-server:8080/actuator/prometheus 15초마다 스크랩 (pull)
+        ├── Grafana → grafana.pongtrader.pro (Cloudflare 터널)
+        └── Loki → 로그 수집 대기
+```
+
+외부에서 `grafana.pongtrader.pro` 접속 → Cloudflare 터널 → pong-server cloudflared → monitoring-server:3000 → Grafana
+
+---
+
 ## 다음에 할 것
 
-- monitoring-server에서 git clone 후 start.sh 실행
-- Grafana 대시보드 연결 (Prometheus 데이터소스 추가)
-- JVM / Spring Boot 대시보드 임포트 (Grafana 공식 대시보드 ID 활용)
-- Cloudflare config.yml에 grafana.pongtrader.pro 추가
+- SecurityConfig 화이트리스트 커밋 + 푸시 (CI/CD 배포)
+- VM 재시작 시 IP 변경 문제 해결 (pong-server.mshome.net 테스트)
 - k6 설치 + DB 상태 성능 측정
 - Redis 전환 후 성능 비교
 - Grafana Alert → 슬랙 연결
-- VM 재시작 시 IP 변경 문제 해결 (pong-server.mshome.net 테스트)
+- Promtail 설치 (pong-server 로그 → Loki로 수집)

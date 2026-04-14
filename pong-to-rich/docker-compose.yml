@@ -44,11 +44,29 @@ services:
       timeout: 5s
       retries: 5
 
+  # Promtail — pong-to-rich-app 컨테이너 로그를 읽어서 monitoring-server Loki로 전송
+  # Loki가 monitoring-server에 있어서 같은 docker-compose 네트워크로 접근 불가
+  # → LOKI_URL 환경변수로 외부 IP 주입 (.env에서 관리)
+  promtail:
+    image: grafana/promtail:latest
+    container_name: pong-promtail
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml  # 설정 파일 마운트
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro    # Docker 컨테이너 로그 읽기 (읽기 전용)
+      - /var/run/docker.sock:/var/run/docker.sock                   # Docker 소켓 (컨테이너 목록 조회용)
+    environment:
+      LOKI_URL: ${LOKI_URL}  # monitoring-server IP (.env에서 주입)
+    command: -config.file=/etc/promtail/config.yml -config.expand-env=true  # 환경변수 치환 활성화
+    depends_on:
+      - app
+    networks:
+      - pong-network
+
   # redis:          ← Phase 8 (알림/캐시) 때 추가
   # kafka:          ← Phase 16 (Kafka) 때 추가
   # elasticsearch:  ← Phase 16 (ES) 때 추가
 
-  # prometheus, grafana → monitoring-server VM에서 별도 docker-compose로 실행
+  # prometheus, grafana, loki → monitoring-server VM에서 별도 docker-compose로 실행
   # monitoring/docker-compose.yml 참고
 
 networks:

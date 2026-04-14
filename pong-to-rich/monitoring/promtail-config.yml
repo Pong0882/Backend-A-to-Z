@@ -1,0 +1,29 @@
+server:
+  http_listen_port: 9080  # Promtail 자체 HTTP 포트 (상태 확인용)
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml  # 어디까지 읽었는지 위치 저장 (재시작 시 중복 방지)
+
+clients:
+  - url: http://${LOKI_URL}:3100/loki/api/v1/push  # Loki 주소 (.env에서 주입)
+
+scrape_configs:
+
+  # Spring Boot 앱 컨테이너 로그 수집
+  # Docker 컨테이너 stdout → /var/lib/docker/containers/{id}/{id}-json.log
+  - job_name: pong-to-rich-app
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock  # Docker 소켓으로 컨테이너 목록 조회
+        refresh_interval: 5s
+    relabel_configs:
+      # pong-to-rich-app 컨테이너만 수집 (다른 컨테이너 제외)
+      - source_labels: [__meta_docker_container_name]
+        regex: /pong-to-rich-app
+        action: keep
+      # 컨테이너 이름을 라벨로 추가
+      - source_labels: [__meta_docker_container_name]
+        target_label: container
+      # 로그 스트림(stdout/stderr) 라벨 추가
+      - source_labels: [__meta_docker_container_log_stream]
+        target_label: stream
