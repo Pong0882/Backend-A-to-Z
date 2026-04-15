@@ -20,6 +20,11 @@ spring:
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  data:
+    redis:
+      host: redis  # docker-compose 서비스 이름
+      port: 6379
+
 kis:
   app-key: ${KIS_APP_KEY}
   app-secret: ${KIS_APP_SECRET}
@@ -29,3 +34,8 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: ${JWT_ACCESS_EXPIRATION}
   refresh-token-expiration: ${JWT_REFRESH_EXPIRATION}
+
+# Refresh Token 저장소 전환 (db / redis)
+# DB vs Redis 성능 비교 시 이 값만 바꾸면 됨
+token:
+  store: ${TOKEN_STORE:db}  # 기본값: db

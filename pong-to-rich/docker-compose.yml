@@ -21,6 +21,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - pong-network
 
@@ -62,7 +64,18 @@ services:
     networks:
       - pong-network
 
-  # redis:          ← Phase 8 (알림/캐시) 때 추가
+  redis:
+    image: redis:7-alpine
+    container_name: pong-to-rich-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - pong-network
+    restart: unless-stopped
+
+  # redis:          ← Phase 8 (알림/캐시) 때 추가 → 완료
   # kafka:          ← Phase 16 (Kafka) 때 추가
   # elasticsearch:  ← Phase 16 (ES) 때 추가
 
@@ -75,3 +88,4 @@ networks:
 
 volumes:
   mysql-data:
+  redis-data:
