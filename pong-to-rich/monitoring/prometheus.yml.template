@@ -10,3 +10,9 @@ scrape_configs:
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['${PONG_SERVER_IP}:8080']  # pong-server IP (.env에서 설정)
+
+  # Redis 메트릭 수집
+  # redis_exporter가 Redis 내부 메트릭을 Prometheus 형식으로 변환해서 노출
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['${PONG_SERVER_IP}:9121']  # redis_exporter 포트
