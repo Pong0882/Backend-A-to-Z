@@ -6,7 +6,8 @@ on:
     branches: [ main ]
     # pong-to-rich 관련 파일이 변경됐을 때만 실행 (docs/notes 변경은 배포 불필요)
     paths:
-      - 'pong-to-rich/**'
+      - 'pong-to-rich/backend/**'
+      - 'pong-to-rich/docker-compose.yml'
       - '.github/workflows/deploy.yml'
 
 jobs:
