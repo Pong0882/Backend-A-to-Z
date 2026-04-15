@@ -12,6 +12,9 @@ management:
   metrics:
     tags:
       application: pong-to-rich
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true  # P95/P99 계산용 histogram 활성화
 
 spring:
   datasource:
