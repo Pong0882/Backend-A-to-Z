@@ -698,7 +698,7 @@
 - [x] Access Token / Refresh Token 전략 정리 → [정리](./notes/phase-14-security-jwt/jwt.md)
 - [x] 실습: JWT 발급 / 검증 / 재발급 필터 구현 → JwtProvider, JwtAuthenticationFilter
 - [x] 실습: DB 기반 Refresh Token 저장 / 재발급 / 로그아웃 구현
-- [ ] 실습: Redis 기반 Refresh Token 저장 및 블랙리스트 구현 (DB → Redis 전환 + 성능 비교)
+- [x] 실습: Redis 기반 Refresh Token 저장 및 블랙리스트 구현 (DB → Redis 전환 + 성능 비교) → [정리](./notes/phase-14-security-jwt/redis-refresh-token.md)
 - [ ] 실습: Redis 기반 JWT 로그아웃 처리 구현
 
 ### 14-3. 보안 취약점 방어
