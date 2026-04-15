@@ -698,7 +698,7 @@
 - [x] Access Token / Refresh Token 전략 정리 → [정리](./notes/phase-14-security-jwt/jwt.md)
 - [x] 실습: JWT 발급 / 검증 / 재발급 필터 구현 → JwtProvider, JwtAuthenticationFilter
 - [x] 실습: DB 기반 Refresh Token 저장 / 재발급 / 로그아웃 구현
-- [ ] 실습: Redis 기반 Refresh Token 저장 및 블랙리스트 구현 (DB → Redis 전환 + 성능 비교)
+- [x] 실습: Redis 기반 Refresh Token 저장 및 블랙리스트 구현 (DB → Redis 전환 + 성능 비교) → [정리](./notes/phase-14-security-jwt/redis-refresh-token.md)
 - [ ] 실습: Redis 기반 JWT 로그아웃 처리 구현
 
 ### 14-3. 보안 취약점 방어
@@ -1202,7 +1202,7 @@
 
 ### 28-1. 이론
 
-- [ ] **성능 테스트 종류 완전 정리**
+- [x] **성능 테스트 종류 완전 정리** → [정리](./notes/phase-28-performance/load-test.md)
   - **Smoke Test** — 최소 부하(VU 1~5)로 기본 동작 확인. 배포 직후 제일 먼저 실행
   - **Load Test** — 예상 정상 트래픽으로 시스템이 목표 성능을 유지하는지 확인
   - **Stress Test** — 한계까지 부하를 높여서 시스템이 어디서 무너지는지 확인
@@ -1215,7 +1215,7 @@
 
 ### 28-2. 부하 테스트 도구 비교
 
-- [ ] **부하 테스트 도구 비교 정리**
+- [x] **부하 테스트 도구 비교 정리** → [정리](./notes/phase-28-performance/load-test.md)
   - **k6** — JavaScript, 코드 기반, CI/CD 연동 최적, 현재 업계 표준 트렌드
   - **JMeter** — Java, GUI 있음, 기업 환경에서 오래 사용됨, 무겁고 XML 설정
   - **Gatling** — Scala DSL, 리포트가 깔끔해서 경영진 보고용, 코드 기반

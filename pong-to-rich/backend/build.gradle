@@ -42,6 +42,9 @@ dependencies {
 	// Prometheus가 이 엔드포인트를 주기적으로 스크랩해서 시계열 데이터 수집
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
+	// Redis — Refresh Token 저장
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'

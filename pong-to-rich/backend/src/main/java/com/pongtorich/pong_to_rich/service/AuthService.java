@@ -1,7 +1,6 @@
 package com.pongtorich.pong_to_rich.service;
 
-import com.pongtorich.pong_to_rich.domain.auth.RefreshToken;
-import com.pongtorich.pong_to_rich.domain.auth.RefreshTokenRepository;
+import com.pongtorich.pong_to_rich.domain.auth.RefreshTokenStore;
 import com.pongtorich.pong_to_rich.domain.user.User;
 import com.pongtorich.pong_to_rich.domain.user.UserRepository;
 import com.pongtorich.pong_to_rich.dto.auth.LoginRequest;
@@ -21,15 +20,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenStore refreshTokenStore;  // DB or Redis — config로 전환
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
 
@@ -71,25 +68,8 @@ public class AuthService {
 
         String accessToken = jwtProvider.generateAccessToken(user.getEmail(), user.getRole().name());
         String refreshToken = jwtProvider.generateRefreshToken(user.getEmail());
-        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(refreshTokenExpiration / 1000);
 
-        refreshTokenRepository.findByEmail(user.getEmail())
-                .ifPresentOrElse(
-                        existing -> {
-                            existing.updateToken(refreshToken, expiresAt);
-                            log.debug("[로그인] Refresh Token 갱신: {}", request.getEmail());
-                        },
-                        () -> {
-                            refreshTokenRepository.save(
-                                    RefreshToken.builder()
-                                            .email(user.getEmail())
-                                            .token(refreshToken)
-                                            .expiresAt(expiresAt)
-                                            .build()
-                            );
-                            log.debug("[로그인] Refresh Token 신규 저장: {}", request.getEmail());
-                        }
-                );
+        refreshTokenStore.save(user.getEmail(), refreshToken, refreshTokenExpiration);
 
         log.info("[로그인] 완료: {}", request.getEmail());
         return TokenResponse.builder()
@@ -98,33 +78,26 @@ public class AuthService {
                 .build();
     }
 
-    @Transactional
     public TokenResponse refresh(RefreshRequest request) {
         log.info("[토큰 재발급] 시도");
 
-        RefreshToken saved = refreshTokenRepository.findByToken(request.refreshToken())
+        String email = refreshTokenStore.findEmailByToken(request.refreshToken())
                 .orElseThrow(() -> {
-                    log.warn("[토큰 재발급] DB에 없는 Refresh Token");
+                    log.warn("[토큰 재발급] 유효하지 않거나 만료된 Refresh Token");
                     return new InvalidTokenException();
                 });
 
-        if (saved.getExpiresAt().isBefore(LocalDateTime.now())) {
-            log.warn("[토큰 재발급] 만료된 Refresh Token: {}", saved.getEmail());
-            refreshTokenRepository.delete(saved);
-            throw new ExpiredTokenException();
-        }
-
         jwtProvider.validateToken(request.refreshToken());
 
-        User user = userRepository.findByEmail(saved.getEmail())
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    log.warn("[토큰 재발급] 사용자 없음: {}", saved.getEmail());
+                    log.warn("[토큰 재발급] 사용자 없음: {}", email);
                     return new UserNotFoundException();
                 });
 
         String newAccessToken = jwtProvider.generateAccessToken(user.getEmail(), user.getRole().name());
 
-        log.info("[토큰 재발급] 완료: {}", saved.getEmail());
+        log.info("[토큰 재발급] 완료: {}", email);
         return TokenResponse.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(request.refreshToken())
@@ -134,6 +107,6 @@ public class AuthService {
     @Transactional
     public void logout(String email) {
         log.info("[로그아웃] 처리: {}", email);
-        refreshTokenRepository.deleteByEmail(email);
+        refreshTokenStore.deleteByEmail(email);
     }
 }
