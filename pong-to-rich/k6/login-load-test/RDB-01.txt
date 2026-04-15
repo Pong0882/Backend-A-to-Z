@@ -1,0 +1,58 @@
+ubuntu@k6-server:~/Backend-A-to-Z/pong-to-rich/k6$ k6 run login-load-test.js
+
+         /\      Grafana   /‾‾/
+    /\  /  \     |\  __   /  /
+   /  \/    \    | |/ /  /  ‾‾\
+  /          \   |   (  |  (‾) |
+ / __________ \  |_|\_\  \_____/
+
+     execution: local
+        script: login-load-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 50 max VUs, 1m0s max duration (incl. graceful stop):
+              * default: 50 looping VUs for 30s (gracefulStop: 30s)
+
+█ THRESHOLDS
+
+    error_rate
+    ✓ 'rate<0.01' rate=0.85%
+
+    http_req_duration
+    ✗ 'p(95)<500' p(95)=2.99s
+
+█ TOTAL RESULTS
+
+    checks_total.......: 1640   52.11563/s
+    checks_succeeded...: 99.14% 1626 out of 1640
+    checks_failed......: 0.85%  14 out of 1640
+
+    ✗ status 200
+      ↳  99% — ✓ 813 / ✗ 7
+    ✗ has accessToken
+      ↳  99% — ✓ 813 / ✗ 7
+
+    CUSTOM
+    error_rate.....................: 0.85%  7 out of 820
+    login_duration.................: avg=1.77s min=211.82ms med=1.74s max=4.77s p(90)=2.11s p(95)=2.99s
+
+    HTTP
+    http_req_duration..............: avg=1.77s min=211.82ms med=1.74s max=4.77s p(90)=2.11s p(95)=2.99s
+      { expected_response:true }...: avg=1.77s min=211.82ms med=1.74s max=4.77s p(90)=2.11s p(95)=2.97s
+    http_req_failed................: 0.85%  7 out of 820
+    http_reqs......................: 820    26.057815/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.87s min=312.61ms med=1.84s max=4.87s p(90)=2.21s p(95)=3.09s
+    iterations.....................: 820    26.057815/s
+    vus............................: 20     min=20       max=50
+    vus_max........................: 50     min=50       max=50
+
+    NETWORK
+    data_received..................: 628 kB 20 kB/s
+    data_sent......................: 162 kB 5.1 kB/s
+
+
+running (0m31.5s), 00/50 VUs, 820 complete and 0 interrupted iterations
+default ✗ [======================================] 50 VUs  30s
+ERRO[0031] thresholds on metrics 'http_req_duration' have been crossed

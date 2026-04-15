@@ -5,10 +5,13 @@
  * 시나리오: 100명의 테스트 유저 중 랜덤으로 로그인 반복
  *
  * 실행:
- *   k6 run login-load-test.js
+ *   k6 run test.js
  *
  * 환경변수로 서버 URL 변경:
- *   k6 run -e BASE_URL=http://192.168.100.10:8080 login-load-test.js
+ *   k6 run -e BASE_URL=http://192.168.100.10:8080 test.js
+ *
+ * 결과 저장:
+ *   k6 run test.js 2>&1 | tee results/RDB-01.txt
  */
 
 import http from 'k6/http';
