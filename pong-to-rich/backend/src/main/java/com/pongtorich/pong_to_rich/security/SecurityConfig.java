@@ -48,9 +48,9 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/api-docs/**"
                         ).permitAll()
-                        // Prometheus 메트릭 — 내부 VM 네트워크(172.24.x.x)에서만 접근 가능 (화이트리스트)
+                        // Prometheus 메트릭 — 내부 고정 네트워크(192.168.100.x)에서만 접근 가능 (화이트리스트)
                         .requestMatchers("/actuator/prometheus")
-                                .access(new WebExpressionAuthorizationManager("hasIpAddress('172.24.0.0/16')"))
+                                .access(new WebExpressionAuthorizationManager("hasIpAddress('192.168.100.0/24')"))
 
                         // logout은 유효한 토큰이 있어야 호출 가능
                         .requestMatchers("/api/auth/logout").authenticated()
