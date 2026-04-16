@@ -1,0 +1,69 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 500 max VUs, 1m0s max duration (incl. graceful stop):
+              * default: 500 looping VUs for 30s (gracefulStop: 30s)
+
+INFO[0006] setup 완료: 100개 refreshToken 수집                source=console
+
+
+  █ THRESHOLDS 
+
+    error_rate
+    ✓ 'rate<0.01' rate=0.00%
+
+    http_req_duration
+    ✗ 'p(95)<200' p(95)=574.15ms
+    ✗ 'p(99)<400' p(99)=715.58ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+    http_req_waiting
+    ✗ 'p(95)<150' p(95)=572.79ms
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 81674   2250.818445/s
+    checks_succeeded...: 100.00% 81674 out of 81674
+    checks_failed......: 0.00%   0 out of 81674
+
+    ✓ status 200
+    ✓ has accessToken
+
+    CUSTOM
+    error_rate.....................: 0.00% 0 out of 40837
+    refresh_duration...............: avg=266.82ms min=12.58ms  med=220.51ms max=956.92ms p(90)=481.24ms p(95)=574.41ms
+
+    HTTP
+    http_req_duration..............: avg=266.32ms min=12.58ms  med=216.2ms  max=956.92ms p(90)=480.64ms p(95)=574.15ms
+      { expected_response:true }...: avg=266.32ms min=12.58ms  med=216.2ms  max=956.92ms p(90)=480.64ms p(95)=574.15ms
+    http_req_failed................: 0.00% 0 out of 40937
+    http_reqs......................: 40937 1128.165079/s
+
+    EXECUTION
+    iteration_duration.............: avg=368.46ms min=112.87ms med=330.16ms max=1.14s    p(90)=583.9ms  p(95)=676.5ms 
+    iterations.....................: 40837 1125.409223/s
+    vus............................: 500   min=0          max=500
+    vus_max........................: 500   min=500        max=500
+
+    NETWORK
+    data_received..................: 32 MB 868 kB/s
+    data_sent......................: 15 MB 403 kB/s
+
+
+
+
+running (0m36.3s), 000/500 VUs, 40837 complete and 0 interrupted iterations
+default ✓ [======================================] 500 VUs  30s
+ERRO[0036] thresholds on metrics 'http_req_duration, http_req_waiting' have been crossed 

@@ -1,6 +1,10 @@
 springdoc:
   server-url: https://pongtrader.pro
 
+logging:
+  level:
+    com.zaxxer.hikari: DEBUG  # HikariCP 커넥션풀 상세 로그 (커넥션 고갈 확인용)
+
 management:
   endpoints:
     web:
