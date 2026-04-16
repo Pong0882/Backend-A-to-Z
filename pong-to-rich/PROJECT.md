@@ -203,7 +203,8 @@ PHASE 7 — 샤딩
 | 회원 | `oauth_accounts` | 소셜 로그인 연동 (카카오/구글/네이버) | 1단계 |
 | 회원 | `broker_accounts` | 증권사 API 키 + 예수금 (broker/account_type 분리) | 1단계 |
 | 종목 | `stocks` | 국내/미국 종목 (market 컬럼으로 시장 구분) | 1단계 |
-| 종목 | `stock_prices` | 시세 히스토리 — 가격 DECIMAL(12,4) | 1단계 |
+| 종목 | `stock_prices` | 일봉 시세 히스토리 — 가격 DECIMAL(12,4) | 1단계 |
+| 종목 | `stock_candles` | 분봉/시간봉 시세 (15M/1H/4H) — 실시간 대량 적재 | 1단계 |
 | 종목 | `watchlists` | 관심 종목 + 가격 알림 | 1단계 |
 | 전략 | `strategies` | 매매 전략 — 스케줄러 기반, 수량 단위 | 1단계 |
 | 전략 | `strategy_conditions` | 전략 조건 — indicator + params JSON 혼합 | 1단계 |
@@ -246,9 +247,13 @@ UNIQUE (user_id, broker, account_type)
 id, code, name, market(KRX/NASDAQ/NYSE)
 UNIQUE (code, market)
 
--- stock_prices
-id, stock_id, trade_date, open_price, high_price, low_price, close_price(DECIMAL 12,4), volume
+-- stock_prices (일봉)
+id, stock_id, trade_date(DATE), open_price, high_price, low_price, close_price(DECIMAL 12,4), volume
 UNIQUE (stock_id, trade_date)
+
+-- stock_candles (분봉/시간봉)
+id, stock_id, interval(15M/1H/4H), trade_time(DATETIME), open_price, high_price, low_price, close_price(DECIMAL 12,4), volume
+UNIQUE (stock_id, interval, trade_time)
 
 -- watchlists
 id, user_id, stock_id, alert_price(nullable), created_at
@@ -294,6 +299,7 @@ strategies 1 ─── N strategy_conditions
 strategies 1 ─── N orders
 
 stocks 1 ─── N stock_prices
+stocks 1 ─── N stock_candles
 stocks 1 ─── N watchlists
 stocks 1 ─── N orders
 stocks 1 ─── N holdings
