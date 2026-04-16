@@ -1210,8 +1210,8 @@
   - **Soak Test (Endurance)** — 장시간 지속 부하로 메모리 누수 / 리소스 고갈 확인
   - **Breakpoint Test** — 시스템이 실제로 다운되는 한계점 찾기
   - **Scalability Test** — 인스턴스 증설 시 성능이 선형으로 늘어나는지 확인
-- [ ] **주요 성능 지표 정리** (TPS / RPS / Latency P50/P95/P99 / Throughput / Error Rate / Apdex)
-- [ ] **병목 지점 유형 정리** (CPU bound / 메모리 / DB 커넥션 / Slow Query / 네트워크 / 스레드 풀)
+- [x] **주요 성능 지표 정리** (TPS / RPS / Latency P50/P95/P99 / Throughput / Error Rate / TTFB / 워밍업) → [정리](./notes/phase-28-performance/performance-metrics.md)
+- [x] **병목 지점 유형 정리** (CPU bound / 메모리 / DB 커넥션 / Slow Query / 네트워크 / 스레드 풀) → [정리](./notes/phase-28-performance/bottleneck-types.md)
 
 ### 28-2. 부하 테스트 도구 비교
 

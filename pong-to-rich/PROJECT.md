@@ -193,29 +193,89 @@ PHASE 7 — 샤딩
 
 ## 6. 도메인 & ERD
 
+> 2026-04-16 설계 확정. 1단계(핵심 도메인)만 먼저 구현하고 커뮤니티/결제/알림/AI는 단계별 추가.
+
 ### 도메인 목록
 
-| 도메인 | 테이블 | 설명 |
-|--------|--------|------|
-| 회원 | `users` | 회원 기본 정보 |
-| 회원 | `oauth_accounts` | 소셜 로그인 연동 |
-| 회원 | `broker_accounts` | 증권사 API 키 (모의/실전) |
-| 종목 | `stocks` | 국내/미국 종목 기본 정보 |
-| 종목 | `stock_prices` | 시세 히스토리 (대용량) |
-| 종목 | `watchlists` | 관심 종목 |
-| 전략 | `strategies` | 매매 전략 정의 |
-| 전략 | `strategy_conditions` | 전략 조건 (매수/매도 조건) |
-| 주문 | `orders` | 주문 내역 |
-| 주문 | `order_executions` | 체결 내역 |
-| 포트폴리오 | `portfolios` | 포트폴리오 |
-| 포트폴리오 | `holdings` | 보유 종목 |
-| 포트폴리오 | `profit_summaries` | 수익률 집계 (Batch) |
-| 커뮤니티 | `posts` | 게시글 |
-| 커뮤니티 | `comments` | 댓글 |
-| 커뮤니티 | `likes` | 좋아요 |
-| 결제 | `payments` | 결제 내역 |
-| 결제 | `point_histories` | 포인트 충전/사용 내역 |
-| 알림 | `notifications` | 알림 내역 |
+| 도메인 | 테이블 | 설명 | 구현 단계 |
+|--------|--------|------|----------|
+| 회원 | `users` | 회원 기본 정보 (닉네임 랜덤 생성, Soft Delete) | 1단계 |
+| 회원 | `oauth_accounts` | 소셜 로그인 연동 (카카오/구글/네이버) | 1단계 |
+| 회원 | `broker_accounts` | 증권사 API 키 + 예수금 (broker/account_type 분리) | 1단계 |
+| 종목 | `stocks` | 국내/미국 종목 (market 컬럼으로 시장 구분) | 1단계 |
+| 종목 | `stock_prices` | 시세 히스토리 — 가격 DECIMAL(12,4) | 1단계 |
+| 종목 | `watchlists` | 관심 종목 + 가격 알림 | 1단계 |
+| 전략 | `strategies` | 매매 전략 — 스케줄러 기반, 수량 단위 | 1단계 |
+| 전략 | `strategy_conditions` | 전략 조건 — indicator + params JSON 혼합 | 1단계 |
+| 주문 | `orders` | 주문 내역 — 시장가/지정가 둘 다 지원 | 1단계 |
+| 주문 | `order_executions` | 체결 내역 (1주문 N체결) | 1단계 |
+| 포트폴리오 | `portfolios` | 포트폴리오 (유저당 1개) | 1단계 |
+| 포트폴리오 | `holdings` | 보유 종목 + 평균매수가 + 숨김 기능 | 1단계 |
+| 포트폴리오 | `profit_summaries` | 수익률 집계 (Spring Batch) | 나중에 |
+| 커뮤니티 | `posts` | 게시글 | 나중에 |
+| 커뮤니티 | `comments` | 댓글 | 나중에 |
+| 커뮤니티 | `likes` | 좋아요 | 나중에 |
+| 결제 | `payments` | 결제 내역 | 나중에 |
+| 결제 | `point_histories` | 포인트 충전/사용 내역 | 나중에 |
+| 알림 | `notifications` | 알림 내역 | 나중에 |
+| AI/ML | `ai_predictions` | AI 예측 결과 (종목별 상승/하락 확률) | STEP 6 |
+| AI/ML | `stock_reports` | 종목별 AI 리포트 (뉴스 + 지표 종합) | STEP 6 |
+| AI/ML | `backtests` | 백테스팅 결과 (전략별 과거 성과) | STEP 6 |
+
+> Redis 저장: KIS access_token → `kis:token:{userId}` (TTL 자동 만료)
+> MongoDB 저장: AI 대화 히스토리 (`chat_sessions`) → STEP 6
+> ES 저장: 뉴스 스크랩 + 감정 점수 (`news` 인덱스) → STEP 6
+
+### 확정 스키마
+
+```sql
+-- users
+id, email, password(nullable), nickname(unique), profile_image,
+point_balance, role, login_type, is_active, deleted_at, created_at, updated_at
+
+-- oauth_accounts
+id, user_id, provider(KAKAO/GOOGLE/NAVER), provider_id, created_at
+UNIQUE (provider, provider_id)
+
+-- broker_accounts
+id, user_id, broker(KIS/KIWOOM/SAMSUNG), account_type(MOCK/REAL),
+appkey, appsecret, balance, balance_synced_at, is_active, created_at, updated_at
+UNIQUE (user_id, broker, account_type)
+
+-- stocks
+id, code, name, market(KRX/NASDAQ/NYSE)
+UNIQUE (code, market)
+
+-- stock_prices
+id, stock_id, trade_date, open_price, high_price, low_price, close_price(DECIMAL 12,4), volume
+UNIQUE (stock_id, trade_date)
+
+-- watchlists
+id, user_id, stock_id, alert_price(nullable), created_at
+UNIQUE (user_id, stock_id)
+
+-- strategies
+id, user_id, broker_account_id, stock_id, name, status(ACTIVE/INACTIVE/PAUSED),
+order_quantity, last_checked_at, created_at, updated_at
+
+-- strategy_conditions
+id, strategy_id, type(BUY/SELL), indicator(VARCHAR 50), params(JSON), created_at
+
+-- orders
+id, user_id, strategy_id(nullable), broker_account_id, stock_id,
+order_type(BUY/SELL), price_type(MARKET/LIMIT), status(PENDING/PARTIAL/FILLED/CANCELLED/FAILED),
+quantity, price(nullable), filled_quantity, created_at, updated_at
+
+-- order_executions
+id, order_id, quantity, price(DECIMAL 12,4), executed_at
+
+-- portfolios
+id, user_id(unique), created_at, updated_at
+
+-- holdings
+id, portfolio_id, stock_id, quantity, average_price(DECIMAL 12,4), is_hidden, created_at, updated_at
+UNIQUE (portfolio_id, stock_id)
+```
 
 ### 주요 관계
 
@@ -223,21 +283,23 @@ PHASE 7 — 샤딩
 users 1 ─── N oauth_accounts
 users 1 ─── N broker_accounts
 users 1 ─── N strategies
-users 1 ─── N portfolios
+users 1 ─── 1 portfolios
 users 1 ─── N orders
-users 1 ─── N posts
+users 1 ─── N watchlists
+
+broker_accounts 1 ─── N strategies
+broker_accounts 1 ─── N orders
 
 strategies 1 ─── N strategy_conditions
 strategies 1 ─── N orders
 
 stocks 1 ─── N stock_prices
 stocks 1 ─── N watchlists
+stocks 1 ─── N orders
+stocks 1 ─── N holdings
 
 orders 1 ─── N order_executions
 portfolios 1 ─── N holdings
-
-posts 1 ─── N comments
-posts 1 ─── N likes
 ```
 
 ---
@@ -440,3 +502,24 @@ pong-to-rich/
 - [ ] AWS 배포 (ECS → EKS)
 - [ ] 모니터링 (Prometheus + Grafana + ELK)
 - [ ] 장애 대응 훈련
+
+### STEP 6 — AI / ML 연동
+- [ ] 뉴스 스크랩 + Elasticsearch 저장
+- [ ] 뉴스 감정 분석 (Python 서비스 연동)
+- [ ] AI Agent 연동 (Claude MCP — 종목 분석, 전략 최적화, 자연어 → 전략 변환)
+- [ ] 백테스팅 엔진 구현 (stock_prices 과거 데이터 기반)
+- [ ] AI 대화 히스토리 저장 (MongoDB)
+- [ ] AI 예측 결과 저장 (`ai_predictions` 테이블)
+- [ ] 종목별 AI 리포트 자동 생성 (`stock_reports` 테이블)
+
+### STEP 7 — MLOps 자동화
+- [ ] ML 모델 학습/추론 서비스 구축 (Python — PyTorch/scikit-learn)
+- [ ] 모델 자동 재학습 파이프라인 (Kafka 이벤트 트리거)
+  - 매일 새로운 시세 데이터 → 학습 데이터 자동 업데이트
+  - 재학습 → 백테스팅 검증 → 기존 모델보다 좋으면 자동 교체
+- [ ] MLflow 모델 버전 관리
+- [ ] Airflow 파이프라인 스케줄링
+- [ ] Harness 테스트 — ML 모델 성능 CI/CD
+  - PR 머지 시 백테스팅 자동 실행
+  - 수익률/샤프지수 기준 통과 여부 체크
+  - 실패하면 머지 차단
