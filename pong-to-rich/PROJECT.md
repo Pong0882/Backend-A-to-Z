@@ -227,6 +227,10 @@ PHASE 7 — 샤딩
 > MongoDB 저장: AI 대화 히스토리 (`chat_sessions`) → STEP 6
 > ES 저장: 뉴스 스크랩 + 감정 점수 (`news` 인덱스) → STEP 6
 
+### ERD 다이어그램
+
+![pong-to-rich ERD](https://github.com/user-attachments/assets/3983e3d5-0471-474a-9a08-7b0f93f5a5a3)
+
 ### 확정 스키마
 
 ```sql

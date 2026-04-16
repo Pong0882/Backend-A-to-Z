@@ -3,6 +3,24 @@
 > *"If you don't find a way to make money while you sleep, you will work until you die."*
 > — Warren Buffett
 
+![Java](https://img.shields.io/badge/Java_17-ED8B00?style=flat&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=springboot&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
+![Kafka](https://img.shields.io/badge/Kafka-231F20?style=flat&logo=apachekafka&logoColor=white)
+
+---
+
+## 목차
+
+- [이야기](#이야기)
+- [무엇을 할 수 있나](#무엇을-할-수-있나)
+- [기술적 목표](#기술적-목표)
+- [서비스](#서비스)
+- [설계 문서](#설계-문서)
+- [면책 고지](#면책-고지)
+
 ---
 
 ## 이야기
@@ -125,6 +143,15 @@ AI 모델을 직접 선택하고, 본인만의 매매 기준을 자연어로 입
 ## 서비스
 
 🌐 [pongtrader.pro](https://pongtrader.pro)
+
+---
+
+## 설계 문서
+
+| 문서 | 내용 |
+|------|------|
+| [PROJECT.md](./PROJECT.md) | 기술 스택, 아키텍처 진화 전략, ERD, API 설계, 개발 단계별 계획 |
+| [erd.sql](./erd.sql) | 전체 테이블 DDL (ERD Cloud 시각화용) |
 
 ---
 
