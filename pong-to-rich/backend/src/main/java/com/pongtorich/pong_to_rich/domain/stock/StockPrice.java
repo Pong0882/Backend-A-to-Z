@@ -6,12 +6,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
 @Table(
     name = "stock_prices",
-    // 같은 종목의 같은 날짜 데이터가 중복 저장되지 않도록 유니크 제약
     uniqueConstraints = @UniqueConstraint(columnNames = {"stock_id", "trade_date"})
 )
 @Getter
@@ -26,33 +26,29 @@ public class StockPrice {
     @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
 
-    // 거래일 (ex. 2026-04-13)
     @Column(nullable = false)
     private LocalDate tradeDate;
 
-    // 시가
-    @Column(nullable = false)
-    private Long openPrice;
+    // DECIMAL(12,4) — 미국 주식 소수점 가격 대응 (ex. 182.5700)
+    @Column(nullable = false, precision = 12, scale = 4)
+    private BigDecimal openPrice;
 
-    // 고가
-    @Column(nullable = false)
-    private Long highPrice;
+    @Column(nullable = false, precision = 12, scale = 4)
+    private BigDecimal highPrice;
 
-    // 저가
-    @Column(nullable = false)
-    private Long lowPrice;
+    @Column(nullable = false, precision = 12, scale = 4)
+    private BigDecimal lowPrice;
 
-    // 종가
-    @Column(nullable = false)
-    private Long closePrice;
+    @Column(nullable = false, precision = 12, scale = 4)
+    private BigDecimal closePrice;
 
-    // 거래량
     @Column(nullable = false)
     private Long volume;
 
     @Builder
     public StockPrice(Stock stock, LocalDate tradeDate,
-                      Long openPrice, Long highPrice, Long lowPrice, Long closePrice,
+                      BigDecimal openPrice, BigDecimal highPrice,
+                      BigDecimal lowPrice, BigDecimal closePrice,
                       Long volume) {
         this.stock = stock;
         this.tradeDate = tradeDate;

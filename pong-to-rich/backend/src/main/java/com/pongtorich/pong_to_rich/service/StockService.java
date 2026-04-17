@@ -9,11 +9,14 @@ import com.pongtorich.pong_to_rich.domain.stock.StockRepository;
 import com.pongtorich.pong_to_rich.dto.kis.KisDailyPriceResponse;
 import com.pongtorich.pong_to_rich.dto.kis.KisStockPriceResponse;
 import com.pongtorich.pong_to_rich.dto.stock.StockPriceResponse;
+import com.pongtorich.pong_to_rich.exception.BusinessException;
+import com.pongtorich.pong_to_rich.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -77,7 +80,7 @@ public class StockService {
     @Transactional(readOnly = true)
     public List<StockPriceResponse> getDailyPrices(String stockCode) {
         Stock stock = stockRepository.findByCode(stockCode)
-                .orElseThrow(() -> new IllegalArgumentException("종목을 찾을 수 없습니다: " + stockCode));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STOCK_NOT_FOUND));
 
         return stockPriceRepository.findByStockOrderByTradeDateDesc(stock)
                 .stream()
@@ -132,12 +135,13 @@ public class StockService {
             // 첫 번째 페이지에서만 종목 등록 (이후엔 stock이 이미 설정됨)
             if (stock == null) {
                 String stockName = response.output1().stockName();
-                stock = stockRepository.findByCode(stockCode)
+                stock = stockRepository.findByCodeAndMarket(stockCode, Stock.Market.KRX)
                         .orElseGet(() -> {
                             log.info("[종목 등록] {} ({})", stockName, stockCode);
                             return stockRepository.save(Stock.builder()
                                     .code(stockCode)
                                     .name(stockName)
+                                    .market(Stock.Market.KRX)
                                     .build());
                         });
             }
@@ -160,10 +164,10 @@ public class StockService {
                 stockPriceRepository.save(StockPrice.builder()
                         .stock(stock)
                         .tradeDate(tradeDate)
-                        .openPrice(Long.parseLong(daily.openPrice()))
-                        .highPrice(Long.parseLong(daily.highPrice()))
-                        .lowPrice(Long.parseLong(daily.lowPrice()))
-                        .closePrice(Long.parseLong(daily.closePrice()))
+                        .openPrice(new BigDecimal(daily.openPrice()))
+                        .highPrice(new BigDecimal(daily.highPrice()))
+                        .lowPrice(new BigDecimal(daily.lowPrice()))
+                        .closePrice(new BigDecimal(daily.closePrice()))
                         .volume(Long.parseLong(daily.volume()))
                         .build());
 

@@ -7,11 +7,13 @@ import com.pongtorich.pong_to_rich.dto.auth.LoginRequest;
 import com.pongtorich.pong_to_rich.dto.auth.RefreshRequest;
 import com.pongtorich.pong_to_rich.dto.auth.SignUpRequest;
 import com.pongtorich.pong_to_rich.dto.auth.TokenResponse;
+import com.pongtorich.pong_to_rich.exception.ErrorCode;
 import com.pongtorich.pong_to_rich.exception.auth.DuplicateEmailException;
 import com.pongtorich.pong_to_rich.exception.auth.ExpiredTokenException;
 import com.pongtorich.pong_to_rich.exception.auth.InvalidCredentialsException;
 import com.pongtorich.pong_to_rich.exception.auth.InvalidTokenException;
 import com.pongtorich.pong_to_rich.exception.auth.UserNotFoundException;
+import com.pongtorich.pong_to_rich.exception.BusinessException;
 import com.pongtorich.pong_to_rich.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,10 +43,17 @@ public class AuthService {
             throw new DuplicateEmailException();
         }
 
+        if (userRepository.existsByNickname(request.getNickname())) {
+            log.warn("[회원가입] 닉네임 중복: {}", request.getNickname());
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .nickname(request.getNickname())
                 .role(User.Role.ROLE_USER)
+                .loginType(User.LoginType.LOCAL)
                 .build();
 
         userRepository.save(user);

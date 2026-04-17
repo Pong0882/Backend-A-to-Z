@@ -2,14 +2,15 @@ package com.pongtorich.pong_to_rich.dto.stock;
 
 import com.pongtorich.pong_to_rich.domain.stock.StockPrice;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record StockPriceResponse(
         LocalDate tradeDate,
-        Long openPrice,
-        Long highPrice,
-        Long lowPrice,
-        Long closePrice,
+        BigDecimal openPrice,
+        BigDecimal highPrice,
+        BigDecimal lowPrice,
+        BigDecimal closePrice,
         Long volume
 ) {
     public static StockPriceResponse from(StockPrice stockPrice) {
