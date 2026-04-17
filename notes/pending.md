@@ -17,3 +17,18 @@
 | Zero Trust | Cloudflare 터널 사용 중 언급됨. "절대 믿지 말고 항상 검증" 보안 모델. | day02-infra | ✅ [정리](phase-14-security-jwt/zero-trust.md) |
 | Refresh Token 재발급 속도 측정 | Access Token 만료 시 두 번 왕복하는 비용이 실제로 얼마인지 Postman으로 측정. 이후 Redis 전환 시 DB vs Redis 응답속도 비교까지 | day03 | ✅ [정리](phase-28-performance/bottleneck-types.md) |
 | Swagger 고도화 + AOP 로깅 | 테이블/Controller 늘어난 후 태그별 그룹화, 응답 스키마 명시. AOP 기반 공통 로깅(@Loggable)과 함께 진행 | day03 | 🔲 |
+| `@PrePersist` / `@PreUpdate` | 모든 Entity의 createdAt/updatedAt 자동 관리 — JPA 생명주기 콜백 | day09 | ✅ [정리](phase-11-db-jpa/jpa-lifecycle-callbacks.md) |
+| Soft Delete | User.softDelete() — deletedAt으로 논리 삭제, Hard Delete와 차이 | day09 | ✅ [정리](phase-11-db-jpa/soft-delete.md) |
+| `BigDecimal` | StockPrice/Holding/Order 가격 타입 — 소수점 정밀도 (미국 주식 대응) | day09 | ✅ [정리](phase-11-db-jpa/bigdecimal.md) |
+| JPA 연관관계 (`@OneToOne` / `@ManyToOne`) | Portfolio-User 1:1, Order-User N:1 등 — LAZY/EAGER, N+1 문제 | day09 | ✅ [정리](phase-11-db-jpa/jpa-relationships.md) |
+| MySQL JSON 타입 | StrategyCondition.params — indicator VARCHAR + params JSON 혼합 방식 | day09 | ✅ [정리](phase-11-db-jpa/mysql-json-type.md) |
+| 복합 UNIQUE (`@UniqueConstraint`) | Stock(code,market), BrokerAccount(user,broker,type) 등 | day09 | ✅ [정리](phase-11-db-jpa/unique-constraint.md) |
+| 더티 체킹 (Dirty Checking) | softDelete/updateNickname 등 save() 없이 UPDATE되는 원리 | day09 | ✅ [정리](phase-11-db-jpa/dirty-checking.md) |
+| `@Enumerated(EnumType.STRING)` | 모든 Enum 컬럼 — ORDINAL vs STRING 차이, 데이터 오염 위험 | day09 | ✅ [정리](phase-11-db-jpa/enum-type.md) |
+| Entity 생성자 패턴 | `@NoArgsConstructor(PROTECTED)` + `@Builder` — JPA 스펙 + 불완전 객체 차단 | day09 | ✅ [정리](phase-11-db-jpa/entity-constructor.md) |
+| `@GeneratedValue` 전략 | IDENTITY/SEQUENCE/TABLE/AUTO 차이 — MySQL은 IDENTITY | day09 | ✅ [정리](phase-11-db-jpa/generated-value.md) |
+| `@Column(updatable = false)` | createdAt에 적용 — JPA 레벨 수정 차단 | day09 | ✅ [정리](phase-11-db-jpa/column-updatable-false.md) |
+| LAZY + 프록시 객체 | FetchType.LAZY 동작 원리, LazyInitializationException, @ToString 주의 | day09 | ✅ [정리](phase-11-db-jpa/lazy-proxy.md) |
+| JpaRepository 기본 메서드 | save/findById/findAll/Query Method 자동 생성 원리 | day09 | ✅ [정리](phase-11-db-jpa/jpa-repository.md) |
+| 영속성 컨텍스트 | 비영속/영속/준영속/삭제 상태, 1차 캐시, 쓰기 지연, flush | day09 | ✅ [정리](phase-11-db-jpa/persistence-context.md) |
+| Entity 설계 원칙 | pong-to-rich 전체 Entity에 적용된 10가지 원칙 총정리 | day09 | ✅ [정리](phase-11-db-jpa/entity-design-principles.md) |

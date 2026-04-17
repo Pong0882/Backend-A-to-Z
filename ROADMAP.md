@@ -7,11 +7,11 @@
 
 ## 진행 현황
 
-| 구분 | 완료 | 미완료 | 합계 |
-|------|------|--------|------|
-| 이론 정리 | 28 | 300 | 328 |
-| 실습 | 12 | 297 | 309 |
-| **전체** | **40** | **597** | **637** |
+| 구분 | 완료 | 미완료 | 합계 | 완료율 |
+|------|------|--------|------|--------|
+| 이론 정리 | 32 | 296 | 328 | 9.8% |
+| 실습 | 13 | 296 | 309 | 4.2% |
+| **전체** | **45** | **592** | **637** | **7.1%** |
 
 > 이 표는 항목 완료 시 수동으로 업데이트한다.
 
@@ -496,7 +496,7 @@
 - [ ] **M:N 관계 처리 전략 정리** (중간 테이블 직접 설계 vs JPA `@ManyToMany`)
 - [ ] **계층형 데이터 설계 패턴 정리** (댓글/카테고리 — Adjacency List / Closure Table / Nested Set)
 - [ ] **이력 테이블 설계 패턴 정리** — 변경 이력을 어떻게 저장하는가
-- [ ] 실습: pong-to-rich 전체 도메인 ERD 설계 (User / Stock / Order / Strategy / Trade)
+- [x] 실습: pong-to-rich 전체 도메인 ERD 설계 (User / Stock / Order / Strategy / Trade) → [day08 devlog](./devlog/day08-2026-04-16.md)
 
 ### 11-1. RDBMS 핵심 원리
 
@@ -549,19 +549,19 @@
 
 - [ ] **ORM 개념 정리** (SQL 직접 작성 vs ORM 방식 비교)
 - [ ] **JPA vs Hibernate 관계 정리** (JPA는 표준 인터페이스, Hibernate는 구현체)
-- [ ] **Entity 상태 4가지 정리** (비영속 / 영속 / 준영속 / 삭제)
-- [ ] **영속성 컨텍스트 동작 원리 정리**
+- [x] **Entity 상태 4가지 정리** (비영속 / 영속 / 준영속 / 삭제) → [정리](./notes/phase-11-db-jpa/persistence-context.md)
+- [x] **영속성 컨텍스트 동작 원리 정리** → [정리](./notes/phase-11-db-jpa/persistence-context.md)
   - 1차 캐시 / 변경 감지 (Dirty Checking) / 쓰기 지연 / 지연 로딩
 - [ ] **플러시(Flush) 시점 정리**
-- [ ] 즉시 로딩(EAGER) vs 지연 로딩(LAZY) 및 N+1 문제 정리
+- [x] 즉시 로딩(EAGER) vs 지연 로딩(LAZY) 및 N+1 문제 정리 → [정리](./notes/phase-11-db-jpa/lazy-proxy.md)
 - [ ] 실습: N+1 문제 재현 → fetch join / `@EntityGraph`로 해결
-- [ ] **연관관계 매핑 정리** (`@OneToMany` / `@ManyToOne` / `@ManyToMany` / `@OneToOne`)
+- [x] **연관관계 매핑 정리** (`@OneToMany` / `@ManyToOne` / `@ManyToMany` / `@OneToOne`) → [정리](./notes/phase-11-db-jpa/jpa-relationships.md)
 - [ ] **연관관계 주인(Owner) 정리**
 - [ ] JPA 상속 매핑 전략 정리 (SINGLE_TABLE / JOINED / TABLE_PER_CLASS)
 - [ ] 실습: 상속 매핑 전략별 쿼리 / 성능 비교
 - [ ] Auditing 정리 (`@CreatedDate` / `@LastModifiedDate`)
 - [ ] 실습: `BaseEntity`에 Auditing 적용
-- [ ] **Spring Data JPA 정리** (`JpaRepository` 메서드 규칙, `@Query`, `Pageable`)
+- [x] **Spring Data JPA 정리** (`JpaRepository` 메서드 규칙, `@Query`, `Pageable`) → [정리](./notes/phase-11-db-jpa/jpa-repository.md)
 - [ ] JPQL vs QueryDSL vs Native Query 비교 정리
 - [ ] 실습: QueryDSL 세팅 및 동적 쿼리 구현
 - [ ] Batch Insert 전략 정리 (`saveAll` 성능 문제, JDBC Batch 설정)
@@ -1611,7 +1611,7 @@
 | 8 | RESTful API & 문서화 | 🟡 진행 중 |
 | 9 | 예외 처리 & 로깅 전략 | 🔲 진행 전 |
 | 10 | TDD | 🔲 진행 전 |
-| 11 | 데이터베이스 & JPA | 🔲 진행 전 |
+| 11 | 데이터베이스 & JPA | 🟡 진행 중 |
 | 12 | AOP | 🔲 진행 전 |
 | 13 | 커스텀 어노테이션 & 멀티모듈 | 🔲 진행 전 |
 | 14 | Spring Security & 인증/인가 | 🔲 진행 전 |
@@ -1628,7 +1628,7 @@
 | 25 | 모니터링 & Observability | 🔲 진행 전 |
 | 26 | CI/CD 파이프라인 | 🔲 진행 전 |
 | 27 | AWS 배포 & 인프라 (SAA 핵심 개념 포함) | 🔲 진행 전 |
-| 28 | 성능 테스트 & 분석 & 카오스 엔지니어링 | 🔲 진행 전 |
+| 28 | 성능 테스트 & 분석 & 카오스 엔지니어링 | 🟡 진행 중 |
 | 29 | 장애 대응 & 트러블슈팅 & 유지보수 | 🔲 진행 전 |
 | 30 | 결제 시스템 (PG 연동 / 환불 / 동시 구매 처리) | 🔲 진행 전 |
 | 31 | 보안 심화 (금융 보안 / AI 보안 / 외부 API 쿼터 / 인프라 보안) | 🔲 진행 전 |
