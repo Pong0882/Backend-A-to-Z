@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>주식 시세 — Pong to Rich</title>
-  <!-- TradingView Lightweight Charts v4 (캔들차트 라이브러리) -->
   <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -34,6 +33,28 @@
     .back-btn:hover { color: #fff; }
 
     h1 { font-size: 1.6rem; font-weight: 700; }
+
+    /* ── 종목 선택 ── */
+    .stock-selector {
+      max-width: 960px;
+      margin: 0 auto 24px;
+    }
+
+    .stock-selector select {
+      background: #263445;
+      color: #ffffff;
+      border: 1px solid #2c3e50;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 1rem;
+      cursor: pointer;
+      min-width: 260px;
+    }
+
+    .stock-selector select:focus {
+      outline: none;
+      border-color: #3498db;
+    }
 
     /* ── 현재가 카드 ── */
     .stock-card {
@@ -88,7 +109,6 @@
       color: #a0b0c0;
     }
 
-    /* 차트 툴팁 — hover 시 OHLCV 표시 */
     .chart-tooltip {
       font-size: 0.82rem;
       color: #c8d8e8;
@@ -152,15 +172,22 @@
     <h1>주식 시세</h1>
   </div>
 
+  <!-- 종목 선택 -->
+  <div class="stock-selector">
+    <select id="stockSelect">
+      <option value="">종목 불러오는 중...</option>
+    </select>
+  </div>
+
   <!-- 현재가 카드 -->
   <div class="stock-card" id="currentCard">
-    <div class="loading">현재가 불러오는 중...</div>
+    <div class="loading">종목을 선택해주세요.</div>
   </div>
 
   <!-- 캔들차트 + 거래량 차트 -->
   <div class="chart-wrap">
     <div class="chart-header">
-      <span class="chart-title">캔들차트 (삼성전자 · 005930)</span>
+      <span class="chart-title" id="chartTitle">캔들차트</span>
       <span class="chart-tooltip" id="chartTooltip"></span>
     </div>
     <div id="candleChart"></div>
@@ -169,19 +196,20 @@
 
   <!-- 일봉 테이블 -->
   <div class="table-wrap">
-    <div class="table-header">일봉 데이터 (삼성전자 · 005930)</div>
+    <div class="table-header" id="tableTitle">일봉 데이터</div>
     <div id="tableArea">
-      <div class="loading">데이터 불러오는 중...</div>
+      <div class="loading">종목을 선택해주세요.</div>
     </div>
   </div>
 
   <script>
-    const STOCK_CODE = '005930';
+    let currentCode = null;
+    let currentName = null;
+    let candleChartInstance = null;
+    let volumeChartInstance = null;
 
-    // 숫자 포맷 (1000 → 1,000)
     const fmt = n => Number(n).toLocaleString('ko-KR');
 
-    // 전일 대비 부호 → 클래스 / 텍스트
     function changeInfo(sign, amount, rate) {
       const cls   = sign === '2' || sign === '1' ? 'change-up'
                   : sign === '4' || sign === '5' ? 'change-down'
@@ -191,16 +219,65 @@
       return { cls, text: `${arrow} ${fmt(Math.abs(amount))} (${rate}%)` };
     }
 
+    // ── 종목 목록 로드 ────────────────────────────────────────────
+    async function loadStockList() {
+      try {
+        const res  = await fetch('/api/stocks');
+        const json = await res.json();
+        const list = json.data;
+
+        const select = document.getElementById('stockSelect');
+        select.innerHTML = '<option value="">종목 선택...</option>';
+
+        list.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.code;
+          opt.textContent = `${s.name} (${s.code})`;
+          select.appendChild(opt);
+        });
+
+        // 첫 번째 종목 자동 선택
+        if (list.length > 0) {
+          select.value = list[0].code;
+          onStockChange(list[0].code, list[0].name);
+        }
+      } catch (e) {
+        document.getElementById('stockSelect').innerHTML =
+          '<option value="">종목 목록 조회 실패</option>';
+      }
+    }
+
+    // ── 종목 변경 시 ──────────────────────────────────────────────
+    function onStockChange(code, name) {
+      currentCode = code;
+      currentName = name;
+
+      document.getElementById('chartTitle').textContent = `캔들차트 · ${name} (${code})`;
+      document.getElementById('tableTitle').textContent = `일봉 데이터 · ${name} (${code})`;
+      document.getElementById('currentCard').innerHTML = '<div class="loading">현재가 불러오는 중...</div>';
+      document.getElementById('tableArea').innerHTML   = '<div class="loading">데이터 불러오는 중...</div>';
+      document.getElementById('chartTooltip').textContent = '';
+
+      // 이전 차트 제거
+      if (candleChartInstance) { candleChartInstance.remove(); candleChartInstance = null; }
+      if (volumeChartInstance) { volumeChartInstance.remove(); volumeChartInstance = null; }
+
+      loadCurrentPrice(code, name);
+      loadDailyPrices(code, name);
+    }
+
+    document.getElementById('stockSelect').addEventListener('change', function () {
+      const code = this.value;
+      const name = this.options[this.selectedIndex].textContent.replace(/ \(.*\)$/, '');
+      if (code) onStockChange(code, name);
+    });
+
     // ── 캔들차트 초기화 ──────────────────────────────────────────
-    // 캔들차트와 거래량 차트를 별도 컨테이너에 생성한 뒤
-    // crosshair 이동 시 툴팁에 OHLCV를 실시간으로 표시한다.
     function initCharts(list) {
-      // API 응답은 최신순(내림차순)이므로 오름차순으로 반전
       const sorted = [...list].reverse();
 
-      // lightweight-charts는 time을 'YYYY-MM-DD' 문자열로 받는다
       const candleData = sorted.map(d => ({
-        time:  String(d.tradeDate),        // LocalDate → "2024-01-02"
+        time:  String(d.tradeDate),
         open:  d.openPrice,
         high:  d.highPrice,
         low:   d.lowPrice,
@@ -210,23 +287,19 @@
       const volumeData = sorted.map(d => ({
         time:  String(d.tradeDate),
         value: d.volume,
-        // 양봉(종가 >= 시가)은 상승색, 음봉은 하락색
         color: d.closePrice >= d.openPrice ? 'rgba(231,76,60,0.5)' : 'rgba(52,152,219,0.5)',
       }));
 
-      // ── 공통 차트 옵션 ────────────────────────────────────────
       const commonOpts = {
         layout: {
           background: { color: '#263445' },
           textColor:  '#a0b0c0',
         },
         grid: {
-          vertLines:  { color: '#2c3e50' },
-          horzLines:  { color: '#2c3e50' },
+          vertLines: { color: '#2c3e50' },
+          horzLines: { color: '#2c3e50' },
         },
-        crosshair: {
-          mode: LightweightCharts.CrosshairMode.Normal,
-        },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
         timeScale: {
           borderColor:    '#2c3e50',
           timeVisible:    true,
@@ -237,17 +310,16 @@
         handleScale:     { mouseWheel: true, pinch: true },
       };
 
-      // ── 캔들차트 ─────────────────────────────────────────────
       const candleEl = document.getElementById('candleChart');
-      const candleChart = LightweightCharts.createChart(candleEl, {
+      candleChartInstance = LightweightCharts.createChart(candleEl, {
         ...commonOpts,
         width:  candleEl.offsetWidth,
         height: 360,
       });
 
-      const candleSeries = candleChart.addCandlestickSeries({
-        upColor:        '#e74c3c',   // 양봉 몸통 (한국: 빨강)
-        downColor:      '#3498db',   // 음봉 몸통 (한국: 파랑)
+      const candleSeries = candleChartInstance.addCandlestickSeries({
+        upColor:         '#e74c3c',
+        downColor:       '#3498db',
         borderUpColor:   '#e74c3c',
         borderDownColor: '#3498db',
         wickUpColor:     '#e74c3c',
@@ -255,40 +327,31 @@
       });
       candleSeries.setData(candleData);
 
-      // ── 거래량 차트 ──────────────────────────────────────────
       const volumeEl = document.getElementById('volumeChart');
-      const volumeChart = LightweightCharts.createChart(volumeEl, {
+      volumeChartInstance = LightweightCharts.createChart(volumeEl, {
         ...commonOpts,
         width:  volumeEl.offsetWidth,
         height: 100,
-        // 거래량 차트는 날짜 축을 숨긴다 (캔들과 겹침 방지)
         timeScale: { ...commonOpts.timeScale, visible: false },
       });
 
-      const volumeSeries = volumeChart.addHistogramSeries({
-        priceFormat:     { type: 'volume' },
-        priceScaleId:    '',
-        scaleMargins:    { top: 0.1, bottom: 0 },
+      const volumeSeries = volumeChartInstance.addHistogramSeries({
+        priceFormat:  { type: 'volume' },
+        priceScaleId: '',
+        scaleMargins: { top: 0.1, bottom: 0 },
       });
       volumeSeries.setData(volumeData);
 
-      // ── 두 차트의 timeScale 동기화 ───────────────────────────
-      // 캔들에서 스크롤/줌 하면 거래량도 같이 움직인다
-      candleChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-        if (range) volumeChart.timeScale().setVisibleLogicalRange(range);
+      candleChartInstance.timeScale().subscribeVisibleLogicalRangeChange(range => {
+        if (range) volumeChartInstance.timeScale().setVisibleLogicalRange(range);
       });
-      volumeChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-        if (range) candleChart.timeScale().setVisibleLogicalRange(range);
+      volumeChartInstance.timeScale().subscribeVisibleLogicalRangeChange(range => {
+        if (range) candleChartInstance.timeScale().setVisibleLogicalRange(range);
       });
 
-      // ── crosshair 동기화 + 툴팁 ─────────────────────────────
       const tooltip = document.getElementById('chartTooltip');
-
-      candleChart.subscribeCrosshairMove(param => {
-        if (!param || !param.time) {
-          tooltip.textContent = '';
-          return;
-        }
+      candleChartInstance.subscribeCrosshairMove(param => {
+        if (!param || !param.time) { tooltip.textContent = ''; return; }
         const c = param.seriesData.get(candleSeries);
         const v = volumeData.find(d => d.time === param.time);
         if (c) {
@@ -303,24 +366,20 @@
              종 <b style="color:${cls}">${fmt(c.close)}</b> &nbsp;
              <span style="color:${cls}">${arrow}${fmt(Math.abs(diff))}</span> &nbsp;
              거래량 <b>${v ? fmt(v.value) : '-'}</b>`;
-
-          // 거래량 차트도 같은 시간으로 crosshair 이동
-          volumeChart.setCrosshairPosition(v ? v.value : 0, param.time, volumeSeries);
+          volumeChartInstance.setCrosshairPosition(v ? v.value : 0, param.time, volumeSeries);
         }
       });
 
-      // ── 창 리사이즈 대응 ─────────────────────────────────────
       window.addEventListener('resize', () => {
-        candleChart.applyOptions({ width: candleEl.offsetWidth });
-        volumeChart.applyOptions({ width: volumeEl.offsetWidth });
+        candleChartInstance.applyOptions({ width: candleEl.offsetWidth });
+        volumeChartInstance.applyOptions({ width: volumeEl.offsetWidth });
       });
 
-      // 전체 데이터가 보이도록 맞춤
-      candleChart.timeScale().fitContent();
+      candleChartInstance.timeScale().fitContent();
     }
 
-    // ── 최신 일봉 데이터로 현재가 카드 구성 ──────────────────────
-    function renderCurrentCard(prices) {
+    // ── 최신 일봉으로 현재가 카드 폴백 ──────────────────────────
+    function renderCurrentCard(prices, code, name) {
       if (!prices || prices.length === 0) {
         document.getElementById('currentCard').innerHTML =
           `<div class="error">현재가 데이터가 없습니다.</div>`;
@@ -335,8 +394,8 @@
       const arrow  = diff > 0 ? '▲' : diff < 0 ? '▼' : '-';
 
       document.getElementById('currentCard').innerHTML = `
-        <div class="stock-name">삼성전자</div>
-        <div class="stock-code">${STOCK_CODE} · 기준일: ${latest.tradeDate}</div>
+        <div class="stock-name">${name}</div>
+        <div class="stock-code">${code} · 기준일: ${latest.tradeDate}</div>
         <div class="current-price">${fmt(latest.closePrice)} <small style="font-size:1rem">원</small></div>
         <div class="price-detail">
           <span class="${cls}">${arrow} ${fmt(Math.abs(diff))} (${rate}%)</span>
@@ -347,20 +406,20 @@
       `;
     }
 
-    // ── 현재가 API 호출 (한투 실시간) ────────────────────────────
-    async function loadCurrentPrice() {
+    // ── 현재가 API (한투 실시간) ─────────────────────────────────
+    async function loadCurrentPrice(code, name) {
       try {
-        const res  = await fetch(`/api/stocks/${STOCK_CODE}`);
+        const res  = await fetch(`/api/stocks/${code}`);
         const json = await res.json();
         const d    = json.data;
 
-        if (!d || !d.stck_prpr) return; // 실패 시 일봉 폴백은 loadDailyPrices에서 처리
+        if (!d || !d.stck_prpr) return;
 
         const { cls, text } = changeInfo(d.prdy_vrss_sign, d.prdy_vrss, d.prdy_ctrt);
 
         document.getElementById('currentCard').innerHTML = `
-          <div class="stock-name">삼성전자</div>
-          <div class="stock-code">${STOCK_CODE} · 실시간</div>
+          <div class="stock-name">${name}</div>
+          <div class="stock-code">${code} · 실시간</div>
           <div class="current-price ${cls}">${fmt(d.stck_prpr)} <small style="font-size:1rem">원</small></div>
           <div class="price-detail">
             <span class="${cls}">${text}</span>
@@ -370,33 +429,30 @@
           </div>
         `;
       } catch (e) {
-        // 실패 무시 — loadDailyPrices의 폴백이 처리
+        // 실패 무시 — loadDailyPrices 폴백이 처리
       }
     }
 
-    // ── 일봉 데이터 API 호출 → 차트 + 테이블 렌더링 ─────────────
-    async function loadDailyPrices() {
+    // ── 일봉 데이터 → 차트 + 테이블 ────────────────────────────
+    async function loadDailyPrices(code, name) {
       try {
-        const res  = await fetch(`/api/stocks/${STOCK_CODE}/prices`);
+        const res  = await fetch(`/api/stocks/${code}/prices`);
         const json = await res.json();
         const list = json.data;
 
         if (!list || list.length === 0) {
           document.getElementById('tableArea').innerHTML =
             `<div class="error">저장된 데이터가 없습니다.</div>`;
-          renderCurrentCard(null);
+          renderCurrentCard(null, code, name);
           return;
         }
 
-        // 현재가 카드가 아직 로딩 중이면 일봉 폴백
         if (document.getElementById('currentCard').querySelector('.loading')) {
-          renderCurrentCard(list);
+          renderCurrentCard(list, code, name);
         }
 
-        // 차트 그리기
         initCharts(list);
 
-        // 테이블 그리기
         const rows = list.map(d => `
           <tr>
             <td>${d.tradeDate}</td>
@@ -429,8 +485,8 @@
       }
     }
 
-    loadCurrentPrice();
-    loadDailyPrices();
+    // 페이지 로드 시 종목 목록부터
+    loadStockList();
   </script>
 
 </body>

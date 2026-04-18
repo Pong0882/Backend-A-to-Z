@@ -9,6 +9,7 @@ import com.pongtorich.pong_to_rich.domain.stock.StockRepository;
 import com.pongtorich.pong_to_rich.dto.kis.KisDailyPriceResponse;
 import com.pongtorich.pong_to_rich.dto.kis.KisStockPriceResponse;
 import com.pongtorich.pong_to_rich.dto.stock.StockPriceResponse;
+import com.pongtorich.pong_to_rich.dto.stock.StockResponse;
 import com.pongtorich.pong_to_rich.exception.BusinessException;
 import com.pongtorich.pong_to_rich.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,14 @@ public class StockService {
     private final ObjectMapper objectMapper;
 
     private static final DateTimeFormatter TRADE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+    // DB에 저장된 종목 목록 조회
+    @Transactional(readOnly = true)
+    public List<StockResponse> getAllStocks() {
+        return stockRepository.findAllByMarket(Stock.Market.KRX).stream()
+                .map(StockResponse::from)
+                .toList();
+    }
 
     // 주식 현재가 조회
     // FID_COND_MRKT_DIV_CODE: J (주식)

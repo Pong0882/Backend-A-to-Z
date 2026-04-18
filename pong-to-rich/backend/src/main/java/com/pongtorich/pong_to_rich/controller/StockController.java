@@ -3,6 +3,7 @@ package com.pongtorich.pong_to_rich.controller;
 import com.pongtorich.pong_to_rich.common.ApiResult;
 import com.pongtorich.pong_to_rich.dto.kis.KisStockPriceResponse;
 import com.pongtorich.pong_to_rich.dto.stock.StockPriceResponse;
+import com.pongtorich.pong_to_rich.dto.stock.StockResponse;
 import com.pongtorich.pong_to_rich.service.StockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +21,13 @@ import java.util.List;
 public class StockController {
 
     private final StockService stockService;
+
+    // GET /api/stocks → DB에 저장된 종목 목록 조회
+    @Operation(summary = "종목 목록 조회")
+    @GetMapping
+    public ResponseEntity<ApiResult<List<StockResponse>>> getAllStocks() {
+        return ResponseEntity.ok(ApiResult.ok(stockService.getAllStocks()));
+    }
 
     // GET /api/stocks/005930 → 삼성전자 현재가 조회
     @Operation(summary = "주식 현재가 조회")

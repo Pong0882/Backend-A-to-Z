@@ -5,3 +5,6 @@
 
 # monitoring — template에서 생성되는 파일 (IP 포함)
 monitoring/prometheus.yml
+
+# 주식 데이터 CSV — 로컬 전용, git 제외
+scripts/data/
