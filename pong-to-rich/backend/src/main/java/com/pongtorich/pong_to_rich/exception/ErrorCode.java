@@ -16,6 +16,9 @@ public enum ErrorCode {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 토큰입니다. 다시 로그인해주세요."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
 
+    // KIS
+    KIS_AUTH_FAILED(HttpStatus.BAD_GATEWAY, "한국투자증권 토큰 발급에 실패했습니다."),
+
     // Stock
     STOCK_NOT_FOUND(HttpStatus.NOT_FOUND, "종목을 찾을 수 없습니다."),
 
