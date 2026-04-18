@@ -22,6 +22,11 @@ public enum ErrorCode {
     // Stock
     STOCK_NOT_FOUND(HttpStatus.NOT_FOUND, "종목을 찾을 수 없습니다."),
 
+    // BrokerAccount
+    BROKER_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "증권사 계좌를 찾을 수 없습니다."),
+    BROKER_ACCOUNT_DUPLICATE(HttpStatus.CONFLICT, "이미 등록된 증권사 계좌입니다."),
+    BROKER_ACCOUNT_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 증권사 계좌에 대한 권한이 없습니다."),
+
     // Common
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다.");
 

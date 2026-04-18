@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -32,7 +33,7 @@ public class AuthController {
             @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일")
     })
     @PostMapping("/signup")
-    public ResponseEntity<ApiResult<Void>> signUp(@RequestBody SignUpRequest request) {
+    public ResponseEntity<ApiResult<Void>> signUp(@Valid @RequestBody SignUpRequest request) {
         authService.signUp(request);
         return ResponseEntity.ok(ApiResult.ok());
     }
@@ -43,7 +44,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "이메일 또는 비밀번호 불일치")
     })
     @PostMapping("/login")
-    public ResponseEntity<ApiResult<TokenResponse>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResult<TokenResponse>> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(ApiResult.ok(authService.login(request)));
     }
 

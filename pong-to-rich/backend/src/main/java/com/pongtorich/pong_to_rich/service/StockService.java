@@ -11,6 +11,7 @@ import com.pongtorich.pong_to_rich.dto.kis.KisStockPriceResponse;
 import com.pongtorich.pong_to_rich.dto.stock.StockPriceResponse;
 import com.pongtorich.pong_to_rich.exception.BusinessException;
 import com.pongtorich.pong_to_rich.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 // @Service → notes/phase-7-spring-core/spring-layers.md
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class StockService {
 
     private final KisConfig kisConfig;
@@ -36,17 +38,6 @@ public class StockService {
     private final ObjectMapper objectMapper;
 
     private static final DateTimeFormatter TRADE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
-
-    public StockService(KisConfig kisConfig, KisAuthService kisAuthService,
-                        StockRepository stockRepository, StockPriceRepository stockPriceRepository,
-                        ObjectMapper objectMapper) {
-        this.kisConfig = kisConfig;
-        this.kisAuthService = kisAuthService;
-        this.stockRepository = stockRepository;
-        this.stockPriceRepository = stockPriceRepository;
-        this.restClient = RestClient.create();
-        this.objectMapper = objectMapper;
-    }
 
     // 주식 현재가 조회
     // FID_COND_MRKT_DIV_CODE: J (주식)
