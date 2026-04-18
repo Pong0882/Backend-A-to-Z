@@ -37,7 +37,13 @@ public enum ErrorCode {
     STRATEGY_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 전략에 대한 권한이 없습니다."),
     STRATEGY_INVALID_STATUS(HttpStatus.BAD_REQUEST, "현재 상태에서 변경할 수 없습니다."),
 
+    // Order
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
+    ORDER_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 주문에 대한 권한이 없습니다."),
+    ORDER_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "취소할 수 없는 주문입니다."),
+
     // Common
+    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다.");
 
     private final HttpStatus status;
