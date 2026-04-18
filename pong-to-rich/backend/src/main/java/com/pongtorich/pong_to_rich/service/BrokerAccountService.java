@@ -46,7 +46,6 @@ public class BrokerAccountService {
                 .appsecret(request.getAppsecret())
                 .build();
 
-        // TODO: appkey/appsecret 암호화 저장 필요 (현재 평문 저장) — Issue로 등록 예정
         BrokerAccountResponse response = BrokerAccountResponse.from(brokerAccountRepository.save(account));
         log.info("[증권사계좌] 등록 완료: {} — ID: {}", email, response.id());
         return response;

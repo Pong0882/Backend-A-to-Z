@@ -42,6 +42,9 @@ jwt:
   access-token-expiration: ${JWT_ACCESS_EXPIRATION}
   refresh-token-expiration: ${JWT_REFRESH_EXPIRATION}
 
+encrypt:
+  secret-key: ${ENCRYPT_SECRET_KEY}
+
 # Refresh Token 저장소 전환 (db / redis)
 # DB vs Redis 성능 비교 시 이 값만 바꾸면 됨
 token:

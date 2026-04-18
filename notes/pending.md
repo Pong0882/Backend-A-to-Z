@@ -17,6 +17,8 @@
 | Zero Trust | Cloudflare 터널 사용 중 언급됨. "절대 믿지 말고 항상 검증" 보안 모델. | day02-infra | ✅ [정리](phase-14-security-jwt/zero-trust.md) |
 | Refresh Token 재발급 속도 측정 | Access Token 만료 시 두 번 왕복하는 비용이 실제로 얼마인지 Postman으로 측정. 이후 Redis 전환 시 DB vs Redis 응답속도 비교까지 | day03 | ✅ [정리](phase-28-performance/bottleneck-types.md) |
 | Swagger 고도화 + AOP 로깅 | 테이블/Controller 늘어난 후 태그별 그룹화, 응답 스키마 명시. AOP 기반 공통 로깅(@Loggable)과 함께 진행 | day03 | 🔲 |
+| AES-256 암호화 + 위협 모델 | BrokerAccount appkey/appsecret 암호화. CBC/IV 원리, 위협 모델 분석, PBKDF2/KMS TODO | day11 | ✅ [정리](phase-14-security-jwt/aes-encryption.md) |
+| JPA AttributeConverter | DB 저장 시 자동 변환 인터페이스. @Convert 적용, @Component Bean 주입, 서비스 투명성 | day11 | ✅ [정리](phase-11-db-jpa/attribute-converter.md) |
 | TDD — Red/Green/Refactor | KisAuthService에서 첫 적용. @Mock/@InjectMocks, Given/When/Then, RestClient 체이닝 Mock 방법 | day10 | ✅ [정리](phase-10-tdd/tdd-basics.md) |
 | Redis Cache-Aside 패턴 | 캐시 히트/미스 흐름, TTL 계산, StringRedisTemplate vs RedisTemplate, 메모리 캐싱과 비교 | day10 | ✅ [정리](phase-16-redis/redis-cache-pattern.md) |
 | Java 시간 API | LocalDateTime, ChronoUnit.SECONDS.between() — KIS TTL 계산에서 사용 | day10 | ✅ [정리](phase-6-java-jvm/java-time-api.md) |
