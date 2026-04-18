@@ -142,6 +142,40 @@ git rm --cached -r 폴더/       # 폴더 전체
 
 ---
 
+## cherry-pick (특정 커밋만 가져오기)
+
+```bash
+git cherry-pick 커밋해시          # 특정 커밋 하나를 현재 브랜치에 복사
+git cherry-pick 해시1 해시2       # 여러 커밋 한 번에
+git cherry-pick 해시1..해시2      # 범위로 지정 (해시1 제외, 해시2 포함)
+```
+
+**언제 쓰나:**
+- 브랜치 A에만 있는 특정 커밋을 브랜치 B에도 반영하고 싶을 때
+- 실수로 잘못된 브랜치에 커밋했을 때 다른 브랜치로 옮길 때
+- PR 머지 후 notes/devlog처럼 문서 커밋만 main에 따로 반영할 때
+
+**pong-to-rich에서 쓴 사례:**
+```
+feat/issue-26-30-domain-apis 브랜치에 notes 커밋이 들어감
+→ PR 머지 후 해당 커밋만 main에 cherry-pick으로 반영
+```
+
+```bash
+# 커밋 해시 확인
+git log --oneline feat/issue-26-30-domain-apis | head -10
+
+# main으로 이동 후 cherry-pick
+git checkout main
+git cherry-pick aa34111
+git push origin main
+```
+
+> cherry-pick은 커밋을 **복사**한다. 원본 브랜치의 커밋은 그대로 남는다.
+> 내용이 같은 커밋이 두 브랜치에 각각 존재하게 되므로 충돌 가능성을 염두에 둔다.
+
+---
+
 ## 자주 쓰는 조합
 
 ```bash
