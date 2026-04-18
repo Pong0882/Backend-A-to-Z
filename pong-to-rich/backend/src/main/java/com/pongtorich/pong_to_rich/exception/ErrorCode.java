@@ -27,6 +27,11 @@ public enum ErrorCode {
     BROKER_ACCOUNT_DUPLICATE(HttpStatus.CONFLICT, "이미 등록된 증권사 계좌입니다."),
     BROKER_ACCOUNT_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 증권사 계좌에 대한 권한이 없습니다."),
 
+    // Watchlist
+    WATCHLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "관심 종목을 찾을 수 없습니다."),
+    WATCHLIST_DUPLICATE(HttpStatus.CONFLICT, "이미 관심 종목으로 등록된 종목입니다."),
+    WATCHLIST_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 관심 종목에 대한 권한이 없습니다."),
+
     // Common
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다.");
 
