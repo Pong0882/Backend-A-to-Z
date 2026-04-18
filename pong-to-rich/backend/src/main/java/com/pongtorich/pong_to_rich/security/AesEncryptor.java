@@ -60,7 +60,7 @@ public class AesEncryptor implements AttributeConverter<String, String>, Applica
             String key = applicationContext.getEnvironment().getProperty("encrypt.secret-key");
             if (key == null) throw new IllegalStateException("encrypt.secret-key is not configured");
             byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-            log.info("[AesEncryptor] encrypt.secret-key loaded, length={}bytes, value='{}'", keyBytes.length, key);
+            log.info("[AesEncryptor] encrypt.secret-key loaded, length={}bytes", keyBytes.length);
             if (keyBytes.length != 32) {
                 throw new IllegalArgumentException("encrypt.secret-key must be exactly 32 bytes (AES-256)");
             }
