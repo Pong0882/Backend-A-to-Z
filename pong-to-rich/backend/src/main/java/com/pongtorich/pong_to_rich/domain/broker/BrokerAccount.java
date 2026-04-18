@@ -1,6 +1,7 @@
 package com.pongtorich.pong_to_rich.domain.broker;
 
 import com.pongtorich.pong_to_rich.domain.user.User;
+import com.pongtorich.pong_to_rich.security.AesEncryptor;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -38,11 +39,13 @@ public class BrokerAccount {
     @Enumerated(EnumType.STRING)
     private AccountType accountType;
 
-    // KIS API 인증 키 — 실제 값은 .env에서 관리, DB에는 암호화 저장 예정
-    @Column(nullable = false, length = 200)
+    // KIS API 인증 키 — AES-256 암호화 후 DB 저장 (AesEncryptor)
+    @Convert(converter = AesEncryptor.class)
+    @Column(nullable = false, length = 500)
     private String appkey;
 
-    @Column(nullable = false, length = 200)
+    @Convert(converter = AesEncryptor.class)
+    @Column(nullable = false, length = 500)
     private String appsecret;
 
     // 예수금 — KIS API로 주기적 동기화
