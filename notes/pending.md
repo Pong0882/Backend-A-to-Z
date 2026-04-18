@@ -19,6 +19,9 @@
 | Swagger 고도화 + AOP 로깅 | 테이블/Controller 늘어난 후 태그별 그룹화, 응답 스키마 명시. AOP 기반 공통 로깅(@Loggable)과 함께 진행 | day03 | 🔲 |
 | TDD — Red/Green/Refactor | KisAuthService에서 첫 적용. @Mock/@InjectMocks, Given/When/Then, RestClient 체이닝 Mock 방법 | day10 | ✅ [정리](phase-10-tdd/tdd-basics.md) |
 | Redis Cache-Aside 패턴 | 캐시 히트/미스 흐름, TTL 계산, StringRedisTemplate vs RedisTemplate, 메모리 캐싱과 비교 | day10 | ✅ [정리](phase-16-redis/redis-cache-pattern.md) |
+| Java 시간 API | LocalDateTime, ChronoUnit.SECONDS.between() — KIS TTL 계산에서 사용 | day10 | ✅ [정리](phase-6-java-jvm/java-time-api.md) |
+| Mockito verify / ArgumentMatcher | verify/never 호출 검증, longThat 커스텀 조건 검증 | day10 | ✅ [정리](phase-10-tdd/mockito-verify.md) |
+| Mockito Strictness | STRICT_STUBS vs LENIENT — @BeforeEach 공통 stub 패턴에서 LENIENT 사용 이유 | day10 | ✅ [정리](phase-10-tdd/mockito-strictness.md) |
 | `@PrePersist` / `@PreUpdate` | 모든 Entity의 createdAt/updatedAt 자동 관리 — JPA 생명주기 콜백 | day09 | ✅ [정리](phase-11-db-jpa/jpa-lifecycle-callbacks.md) |
 | Soft Delete | User.softDelete() — deletedAt으로 논리 삭제, Hard Delete와 차이 | day09 | ✅ [정리](phase-11-db-jpa/soft-delete.md) |
 | `BigDecimal` | StockPrice/Holding/Order 가격 타입 — 소수점 정밀도 (미국 주식 대응) | day09 | ✅ [정리](phase-11-db-jpa/bigdecimal.md) |
