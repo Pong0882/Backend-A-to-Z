@@ -4,7 +4,7 @@ import api from '../api/axios'
 
 export default function Signup() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ email: '', password: '', nickname: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -43,6 +43,16 @@ export default function Signup() {
             className="bg-surface border border-border rounded-lg px-4 py-3 text-white placeholder-muted focus:outline-none focus:border-primary"
             required
             minLength={8}
+          />
+          <input
+            type="text"
+            placeholder="닉네임 (2~30자)"
+            value={form.nickname}
+            onChange={(e) => setForm({ ...form, nickname: e.target.value })}
+            className="bg-surface border border-border rounded-lg px-4 py-3 text-white placeholder-muted focus:outline-none focus:border-primary"
+            required
+            minLength={2}
+            maxLength={30}
           />
           {error && <p className="text-up text-sm">{error}</p>}
           <button
