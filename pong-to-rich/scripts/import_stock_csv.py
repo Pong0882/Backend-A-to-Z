@@ -42,7 +42,7 @@ def get_or_create_stock(cursor, code: str, name: str) -> int:
 
 
 def import_csv(conn, csv_path: str):
-    df = pd.read_csv(csv_path)
+    df = pd.read_csv(csv_path, dtype={'stock_code': str})
     if df.empty:
         print(f"  → 빈 파일 스킵: {csv_path}")
         return 0
