@@ -10,6 +10,9 @@ lerna-debug.log*
 # 의존성
 node_modules
 
+# Vite 캐시
+.vite
+
 # 빌드 결과물 (CI/CD가 서버에 배포, git으로 관리 안 함)
 dist
 dist-ssr
