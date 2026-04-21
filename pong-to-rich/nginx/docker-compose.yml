@@ -1,0 +1,16 @@
+services:
+
+  nginx:
+    image: nginx:alpine
+    container_name: pong-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./pongtrader.conf:/etc/nginx/conf.d/pongtrader.conf:ro
+    restart: unless-stopped
+    networks:
+      - pong-network
+
+networks:
+  pong-network:
+    external: true  # docker network create pong-network 으로 미리 생성 필요
