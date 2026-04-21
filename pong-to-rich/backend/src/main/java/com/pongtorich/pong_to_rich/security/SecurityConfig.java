@@ -86,7 +86,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "https://pongtrader.pro",
                 "https://api.pongtrader.pro",
-                "http://localhost:5173"
+                "http://localhost:5173",
+                "http://localhost:3000"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

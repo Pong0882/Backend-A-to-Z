@@ -20,6 +20,7 @@ services:
       JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
       TOKEN_STORE: ${TOKEN_STORE:-db}
+      SPRINGDOC_SERVER_URL: ${SPRINGDOC_SERVER_URL:-https://api.pongtrader.pro}
     depends_on:
       mysql:
         condition: service_healthy
@@ -104,7 +105,7 @@ services:
 
 networks:
   pong-network:
-    driver: bridge
+    external: true  # docker network create pong-network 으로 미리 생성 필요
 
 volumes:
   mysql-data:

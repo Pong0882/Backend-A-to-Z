@@ -1,5 +1,5 @@
 springdoc:
-  server-url: https://api.pongtrader.pro
+  server-url: ${SPRINGDOC_SERVER_URL:https://api.pongtrader.pro}
 
 logging:
   level:
