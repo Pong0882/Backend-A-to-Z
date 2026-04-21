@@ -1,20 +1,37 @@
 name: Deploy to Production
 
-# main 브랜치에 push(= PR 머지)될 때만 실행
 on:
   push:
     branches: [ main ]
-    # pong-to-rich 관련 파일이 변경됐을 때만 실행 (docs/notes 변경은 배포 불필요)
-    paths:
-      - 'pong-to-rich/backend/**'
-      - 'pong-to-rich/docker-compose.yml'
-      - '.github/workflows/deploy.yml'
 
 jobs:
-  # ── Job 1: 빌드 & 테스트 (GitHub 호스팅 서버에서 실행) ──────────
-  build:
-    name: Build & Test
+  # ── Job 1: 변경된 경로 감지 ──────────────────────────────────────
+  changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'pong-to-rich/backend/**'
+              - 'pong-to-rich/docker-compose.yml'
+              - '.github/workflows/deploy.yml'
+            frontend:
+              - 'pong-to-rich/frontend/**'
+              - '.github/workflows/deploy.yml'
+
+  # ── Job 2: 백엔드 빌드 & 테스트 ──────────────────────────────────
+  build-backend:
+    name: Build & Test (Backend)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
 
     steps:
       - name: 코드 체크아웃
@@ -41,15 +58,13 @@ jobs:
 
       - name: 빌드 & 테스트
         working-directory: pong-to-rich/backend
-        # application-local.yml 없이도 빌드되도록 prod 프로파일로 실행
-        # 테스트는 일단 skip (테스트 DB 환경 없음) — 추후 TestContainers 도입 시 제거
         run: ./gradlew build -x test
 
-  # ── Job 2: 배포 (VM의 Self-hosted Runner에서 실행) ──────────────
-  deploy:
-    name: Deploy
-    runs-on: self-hosted        # VM에 등록된 runner가 이 job을 실행
-    needs: build                # build job 성공 후에만 실행
+  # ── Job 3: 백엔드 배포 ───────────────────────────────────────────
+  deploy-backend:
+    name: Deploy (Backend)
+    runs-on: self-hosted
+    needs: build-backend
 
     steps:
       - name: 최신 코드 pull
@@ -60,7 +75,7 @@ jobs:
         working-directory: /home/ubuntu/Backend-A-to-Z/pong-to-rich
         run: |
           docker compose up --build -d
-          docker image prune -f   # 이전 이미지 정리
+          docker image prune -f
 
       - name: 헬스체크 (컨테이너 기동 대기)
         run: |
@@ -77,3 +92,21 @@ jobs:
           echo "헬스체크 실패 — 컨테이너 로그 확인"
           docker logs pong-to-rich-app --tail 50
           exit 1
+
+  # ── Job 4: 프론트엔드 배포 ──────────────────────────────────────
+  deploy-frontend:
+    name: Deploy (Frontend)
+    runs-on: self-hosted
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+
+    steps:
+      - name: 최신 코드 pull
+        working-directory: /home/ubuntu/Backend-A-to-Z
+        run: git pull origin main
+
+      - name: 프론트엔드 Docker 이미지 재빌드 & 컨테이너 재시작
+        working-directory: /home/ubuntu/Backend-A-to-Z/pong-to-rich/frontend
+        run: |
+          docker compose up --build -d
+          docker image prune -f

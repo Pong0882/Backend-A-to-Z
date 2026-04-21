@@ -10,6 +10,12 @@ const api = axios.create({
   baseURL: BASE_URL,
 })
 
+// 인터셉터 없는 인스턴스 — 로그인/회원가입 전용
+// 401을 refresh 로직으로 가로채지 않고 컴포넌트에서 직접 에러 처리
+export const authApi = axios.create({
+  baseURL: BASE_URL,
+})
+
 // 요청 인터셉터 — 모든 요청에 Access Token 자동 첨부
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken')

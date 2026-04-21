@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import api from '../api/axios'
+import { authApi } from '../api/axios'
 
 export default function Signup() {
   const navigate = useNavigate()
@@ -13,7 +13,7 @@ export default function Signup() {
     setLoading(true)
     setError('')
     try {
-      await api.post('/auth/signup', form)
+      await authApi.post('/auth/signup', form)
       navigate('/login')
     } catch (err) {
       setError(err.response?.data?.message || '회원가입에 실패했습니다.')
