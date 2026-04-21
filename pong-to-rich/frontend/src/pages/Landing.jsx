@@ -19,7 +19,7 @@ export default function Landing() {
         <Link to="/login" className="bg-card text-muted border border-border px-6 py-3 rounded-lg font-semibold hover:text-white transition-colors">
           로그인
         </Link>
-        <a href="/swagger-ui/index.html" className="bg-card text-muted border border-border px-6 py-3 rounded-lg font-semibold hover:text-white transition-colors">
+        <a href={`${import.meta.env.VITE_API_BASE_URL || ''}/swagger-ui/index.html`} target="_blank" rel="noreferrer" className="bg-card text-muted border border-border px-6 py-3 rounded-lg font-semibold hover:text-white transition-colors">
           API 문서 (Swagger)
         </a>
       </div>

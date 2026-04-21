@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import api from '../api/axios'
+import { authApi } from '../api/axios'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -13,7 +13,7 @@ export default function Login() {
     setLoading(true)
     setError('')
     try {
-      const { data } = await api.post('/auth/login', form)
+      const { data } = await authApi.post('/auth/login', form)
       localStorage.setItem('accessToken', data.data.accessToken)
       localStorage.setItem('refreshToken', data.data.refreshToken)
       navigate('/')
