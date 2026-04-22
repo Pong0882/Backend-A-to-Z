@@ -21,6 +21,7 @@ services:
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
       TOKEN_STORE: ${TOKEN_STORE:-db}
       SPRINGDOC_SERVER_URL: ${SPRINGDOC_SERVER_URL:-https://api.pongtrader.pro}
+      ENCRYPT_SECRET_KEY: ${ENCRYPT_SECRET_KEY}
     depends_on:
       mysql:
         condition: service_healthy
